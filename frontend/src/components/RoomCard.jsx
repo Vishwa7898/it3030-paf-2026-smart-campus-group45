@@ -15,8 +15,17 @@ const RoomCard = ({ room, onBook }) => {
         </div>
       </div>
       <div className="p-6">
-        <h3 className="text-2xl font-bold text-gray-800 mb-2">Room {room.roomNumber}</h3>
-        <p className="text-gray-600 mb-4 h-12 overflow-hidden">{room.description || 'A comfortable and spacious room perfect for your stay.'}</p>
+        <h3 className="text-2xl font-bold text-gray-800 mb-1 truncate" title={room.name || `Room ${room.roomNumber}`}>
+          {room.name || `Room ${room.roomNumber}`}
+        </h3>
+        {room.location && (
+          <p className="text-sm font-semibold text-indigo-600 mb-2 truncate">
+            📍 {room.location}
+          </p>
+        )}
+        <p className="text-gray-600 mb-4 h-12 overflow-hidden text-sm leading-relaxed">
+          {room.description || 'A comfortable and spacious resource ready for use.'}
+        </p>
         
         <div className="flex justify-between items-center mb-6">
           <div className="flex flex-col">

@@ -22,28 +22,55 @@ public class BookingService {
         Room room = roomRepository.findById(request.getRoomId())
                 .orElseThrow(() -> new RuntimeException("Room not found"));
 
-        if (room.getCurrentOccupancy() >= room.getCapacity()) {
-            throw new RuntimeException("Room is fully occupied");
+        List<Booking> overlaps = bookingRepository.findOverlappingBookings(
+            request.getRoomId(), request.getCheckInDate(), request.getCheckOutDate()
+        );
+
+        if (overlaps.size() >= room.getCapacity()) {
+            throw new RuntimeException("Resource overlapping detected. Fully booked for this period.");
         }
 
         Booking booking = Booking.builder()
                 .studentId(request.getStudentId())
                 .roomId(request.getRoomId())
+                .purpose(request.getPurpose())
                 .checkInDate(request.getCheckInDate())
                 .checkOutDate(request.getCheckOutDate())
                 .bookingDate(LocalDateTime.now())
-                .status("CONFIRMED")
+                .status("PENDING")
                 .paymentStatus("PENDING")
                 .build();
-
-        // Update room occupancy
-        room.setCurrentOccupancy(room.getCurrentOccupancy() + 1);
-        roomRepository.save(room);
 
         return bookingRepository.save(booking);
     }
 
     public List<Booking> getBookingsByStudentId(String studentId) {
         return bookingRepository.findByStudentId(studentId);
+    }
+
+    public List<Booking> getAllBookings() {
+        return bookingRepository.findAll();
+    }
+
+    public Booking approveBooking(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        booking.setStatus("APPROVED");
+        return bookingRepository.save(booking);
+    }
+
+    public Booking rejectBooking(String bookingId, String reason) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        booking.setStatus("REJECTED");
+        booking.setReason(reason);
+        return bookingRepository.save(booking);
+    }
+
+    public Booking cancelBooking(String bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+        booking.setStatus("CANCELLED");
+        return bookingRepository.save(booking);
     }
 }

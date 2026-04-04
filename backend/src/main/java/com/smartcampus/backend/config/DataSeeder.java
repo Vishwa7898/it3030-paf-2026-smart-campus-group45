@@ -20,8 +20,10 @@ public class DataSeeder implements CommandLineRunner {
             System.out.println("Seeding database with initial rooms...");
             
             Room room1 = Room.builder()
+                    .name("Main Library Study Room 1")
+                    .location("Library Ground Floor")
                     .roomNumber("101")
-                    .type("SINGLE")
+                    .type("ROOM")
                     .capacity(1)
                     .currentOccupancy(0)
                     .pricePerSemester(500.0)
@@ -30,22 +32,26 @@ public class DataSeeder implements CommandLineRunner {
                     .build();
 
             Room room2 = Room.builder()
+                    .name("Computer Science Lab A")
+                    .location("IT Building Floor 2")
                     .roomNumber("102")
-                    .type("DOUBLE")
-                    .capacity(2)
-                    .currentOccupancy(1)
-                    .pricePerSemester(350.0)
-                    .description("Spacious double room with shared amenities, perfect for living with a friend.")
+                    .type("LAB")
+                    .capacity(30)
+                    .currentOccupancy(0)
+                    .pricePerSemester(0.0)
+                    .description("High performance machines with dual monitors.")
                     .images(List.of("https://images.unsplash.com/photo-1505693314120-0d443867891c?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"))
                     .build();
 
             Room room3 = Room.builder()
+                    .name("Projector and Sound System")
+                    .location("Equipment Room 3")
                     .roomNumber("103")
-                    .type("TRIPLE")
-                    .capacity(3)
-                    .currentOccupancy(3) // Fully occupied
-                    .pricePerSemester(250.0)
-                    .description("Affordable triple room close to the cafeteria. Great community vibe.")
+                    .type("EQUIPMENT")
+                    .capacity(1)
+                    .currentOccupancy(0)
+                    .pricePerSemester(0.0)
+                    .description("Portable projector with Bluetooth sound system for presentations.")
                     .images(List.of("https://images.unsplash.com/photo-1555854877-bab0e564b8d5?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"))
                     .build();
 

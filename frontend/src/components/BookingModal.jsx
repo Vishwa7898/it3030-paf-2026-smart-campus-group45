@@ -3,13 +3,14 @@ import { createBooking } from '../services/api';
 
 const BookingModal = ({ room, onClose, onSuccess }) => {
   const [studentId, setStudentId] = useState('');
+  const [purpose, setPurpose] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!studentId) {
-      setError('Please provide your Student ID');
+    if (!studentId || !purpose) {
+      setError('Please provide your Student ID and Booking Purpose');
       return;
     }
 
@@ -20,8 +21,9 @@ const BookingModal = ({ room, onClose, onSuccess }) => {
       await createBooking({
         studentId,
         roomId: room.id,
+        purpose,
         checkInDate: new Date().toISOString(), // Mocking future date
-        checkOutDate: new Date().toISOString()
+        checkOutDate: new Date(Date.now() + 86400000).toISOString() // +1 day mock
       });
       onSuccess();
     } catch (err) {
@@ -54,8 +56,17 @@ const BookingModal = ({ room, onClose, onSuccess }) => {
               type="text" 
               value={studentId}
               onChange={(e) => setStudentId(e.target.value)}
-              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition mb-4"
               placeholder="e.g. STU12345"
+            />
+
+            <label className="block text-sm font-semibold text-gray-700 mb-2">Booking Purpose</label>
+            <textarea 
+              value={purpose}
+              onChange={(e) => setPurpose(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl border border-gray-300 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition"
+              placeholder="e.g. Study group meeting"
+              rows={3}
             />
           </div>
 

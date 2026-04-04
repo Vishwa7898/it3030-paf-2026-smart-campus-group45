@@ -22,6 +22,9 @@ public class Booking {
     private String studentId;
     private String roomId;
     
+    private String purpose;
+    private String reason;
+    
     private LocalDateTime bookingDate;
     
     private LocalDateTime checkInDate;

@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public class BookingRequest {
     private String studentId;
     private String roomId;
+    private String purpose;
     private LocalDateTime checkInDate;
     private LocalDateTime checkOutDate;
 }

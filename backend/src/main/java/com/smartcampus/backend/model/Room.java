@@ -18,6 +18,9 @@ public class Room {
     @Id
     private String id;
     
+    private String name;
+    private String location;
+    
     private String roomNumber;
     
     // e.g. SINGLE, DOUBLE, TRIPLE
