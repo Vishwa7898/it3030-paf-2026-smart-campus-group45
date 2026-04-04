@@ -39,14 +39,20 @@ public class IncidentTicketController {
             @RequestParam(required = false) String assigneeId,
             @RequestParam(required = false) TicketPriority priority,
             @RequestParam(required = false) String category,
-            @RequestParam(required = false) String q) {
-        List<IncidentTicket> tickets = ticketService.findTickets(status, submitterId, assigneeId, priority, category, q);
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String viewerId,
+            @RequestParam(required = false) String viewerRole) {
+        List<IncidentTicket> tickets = ticketService.findTickets(
+                status, submitterId, assigneeId, priority, category, q, viewerId, viewerRole);
         return ResponseEntity.ok(tickets);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<IncidentTicket> getTicketById(@PathVariable String id) {
-        IncidentTicket ticket = ticketService.getTicketById(id);
+    public ResponseEntity<IncidentTicket> getTicketById(
+            @PathVariable String id,
+            @RequestParam(required = false) String viewerId,
+            @RequestParam(required = false) String viewerRole) {
+        IncidentTicket ticket = ticketService.getTicketById(id, viewerId, viewerRole);
         return ResponseEntity.ok(ticket);
     }
 

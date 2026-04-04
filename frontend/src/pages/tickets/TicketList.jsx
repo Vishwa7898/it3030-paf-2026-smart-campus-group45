@@ -1,19 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import { Plus, Search, Filter, AlertCircle, Clock, CheckCircle2, XCircle } from 'lucide-react';
+import { Plus, Search, Filter, AlertCircle, Clock, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { TicketService } from '../../services/api';
+import { useAuth } from '../../auth/AuthContext';
 
 const TicketList = () => {
+  const { user, isStudent, isAdmin, isTechnician } = useAuth();
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    loadTickets();
-  }, [filter, search]);
-
-  const loadTickets = async () => {
+  const loadTickets = useCallback(async () => {
     setLoading(true);
     try {
       const statusFilter = filter === 'ALL' ? null : filter;
@@ -27,7 +25,11 @@ const TicketList = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [filter, search, user?.id, user?.role]);
+
+  useEffect(() => {
+    loadTickets();
+  }, [loadTickets]);
 
   const getStatusIcon = (status) => {
     switch(status) {
@@ -72,15 +74,44 @@ const TicketList = () => {
 
   return (
     <div className="space-y-6">
+      <div
+        className={`flex gap-3 p-4 rounded-2xl border text-sm ${
+          isStudent
+            ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
+            : isAdmin
+              ? 'bg-violet-50/90 border-violet-200 text-violet-900'
+              : 'bg-amber-50/90 border-amber-200 text-amber-950'
+        }`}
+      >
+        <Info className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
+        <div>
+          <p className="font-semibold">
+            {isStudent && 'Student view — only your submitted tickets'}
+            {isAdmin && 'Admin view — all tickets from every student'}
+            {isTechnician && !isAdmin && 'Technician view — all tickets (update status when you are the assignee)'}
+          </p>
+          <p className="text-xs mt-1 opacity-90 leading-relaxed">
+            {isStudent &&
+              'You will see OPEN, IN_PROGRESS, RESOLVED, CLOSED, or REJECTED (with reason) on each card. Open a ticket for the full progress timeline.'}
+            {isAdmin &&
+              'Use ticket details to assign staff and move the workflow: OPEN → IN_PROGRESS → RESOLVED → CLOSED, or set REJECTED with a reason.'}
+            {isTechnician && !isAdmin &&
+              'After an admin assigns you (your id: tech-jamith), you can add resolution notes and mark IN_PROGRESS → RESOLVED.'}
+          </p>
+        </div>
+      </div>
+
       {/* Header Actions */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
         <div className="flex gap-4 items-center">
           <div className="relative">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
-              placeholder="Search tickets..." 
-              className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-64"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder={isStudent ? 'Search your tickets…' : 'Search all tickets…'}
+              className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-full sm:w-64"
             />
           </div>
           <div className="flex items-center gap-2">

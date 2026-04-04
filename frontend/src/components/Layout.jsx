@@ -1,4 +1,4 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Ticket,
@@ -7,30 +7,42 @@ import {
   User,
   Bell,
   Sparkles,
+  LogOut,
 } from 'lucide-react';
-import { demoUser } from '../config/demoUser';
+import { useMemo } from 'react';
+import { useAuth } from '../auth/AuthContext';
 
 const Layout = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, logout, isStudent } = useAuth();
 
-  const navigation = [
-    {
-      name: 'Ticket board',
-      href: '/tickets',
-      icon: LayoutDashboard,
-      description: 'All incidents',
-      match: (path) =>
-        path === '/tickets' ||
-        (path.startsWith('/tickets/') && path !== '/tickets/new'),
-    },
-    {
-      name: 'Report issue',
-      href: '/tickets/new',
-      icon: PlusCircle,
-      description: 'New ticket',
-      match: (path) => path === '/tickets/new',
-    },
-  ];
+  const navigation = useMemo(
+    () => [
+      {
+        name: 'Ticket board',
+        href: '/tickets',
+        icon: LayoutDashboard,
+        description: isStudent ? 'Your tickets only' : 'Every submission',
+        match: (path) =>
+          path === '/tickets' ||
+          (path.startsWith('/tickets/') && path !== '/tickets/new'),
+      },
+      {
+        name: 'Report issue',
+        href: '/tickets/new',
+        icon: PlusCircle,
+        description: 'Create ticket',
+        match: (path) => path === '/tickets/new',
+      },
+    ],
+    [isStudent]
+  );
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   const pageTitle = () => {
     if (location.pathname === '/tickets/new') return 'Report a new issue';
@@ -118,18 +130,26 @@ const Layout = ({ children }) => {
             </div>
           </nav>
 
-          <div className="p-4 mx-3 mb-4 rounded-2xl bg-gradient-to-br from-white/12 to-white/5 border border-white/10 backdrop-blur-sm">
+          <div className="p-4 mx-3 mb-4 rounded-2xl bg-gradient-to-br from-white/12 to-white/5 border border-white/10 backdrop-blur-sm space-y-3">
             <div className="flex items-center gap-3">
               <div className="w-11 h-11 rounded-full bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center text-white shadow-lg ring-2 ring-white/20">
                 <User className="w-5 h-5" />
               </div>
               <div className="min-w-0 flex-1">
                 <p className="font-semibold text-sm text-white truncate">
-                  {demoUser.id}
+                  {user?.displayName ?? user?.id}
                 </p>
-                <p className="text-xs text-indigo-200/80 font-medium">{demoUser.role}</p>
+                <p className="text-xs text-indigo-200/80 font-medium">{user?.role}</p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-sm font-medium text-white/90 bg-white/10 hover:bg-white/15 border border-white/10 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+              Log out
+            </button>
           </div>
         </div>
       </aside>

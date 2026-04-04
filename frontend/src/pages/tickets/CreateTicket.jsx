@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, Save, ArrowLeft } from 'lucide-react';
 import { TicketService } from '../../services/api';
-import { demoUser } from '../../config/demoUser';
+import { useAuth } from '../../auth/AuthContext';
 
 const CreateTicket = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [images, setImages] = useState([]);
@@ -17,8 +18,14 @@ const CreateTicket = () => {
     description: '',
     priority: 'LOW',
     contactDetails: '',
-    submitterId: demoUser.id
+    submitterId: '',
   });
+
+  useEffect(() => {
+    if (user?.id) {
+      setFormData((prev) => ({ ...prev, submitterId: user.id }));
+    }
+  }, [user?.id]);
 
   const categories = [
     'Hardware Issue', 
@@ -49,6 +56,10 @@ const CreateTicket = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!formData.submitterId?.trim()) {
+      setError('You must be signed in to submit (submitter id missing).');
+      return;
+    }
     setLoading(true);
     setError(null);
     try {

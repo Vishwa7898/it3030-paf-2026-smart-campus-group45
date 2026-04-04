@@ -3,11 +3,13 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Clock, AlertCircle, XCircle, FileText, User, Trash2 } from 'lucide-react';
 import { TicketService, getImageUrl } from '../../services/api';
 import CommentSection from '../../components/CommentSection';
-import { demoUser } from '../../config/demoUser';
+import TicketProgressStepper from '../../components/TicketProgressStepper';
+import { useAuth } from '../../auth/AuthContext';
 
 const TicketDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user: currentUser, isStudent, isAdmin } = useAuth();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   
@@ -18,8 +20,6 @@ const TicketDetails = () => {
   const [editCategory, setEditCategory] = useState('');
   const [editContact, setEditContact] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
-
-  const currentUser = demoUser;
 
   useEffect(() => {
     loadTicket();
@@ -36,7 +36,13 @@ const TicketDetails = () => {
       setEditCategory(data.category || '');
       setEditContact(data.contactDetails || '');
     } catch (err) {
+      if (err?.response?.status === 403) {
+        alert(err?.response?.data?.message || 'You cannot view this ticket.');
+        navigate('/tickets', { replace: true });
+        return;
+      }
       console.error(err);
+      setTicket(null);
     } finally {
       setLoading(false);
     }
@@ -93,13 +99,18 @@ const TicketDetails = () => {
     }
   };
 
-  const canAssign = currentUser.role === 'ADMIN';
+  const canAssign = currentUser?.role === 'ADMIN';
+  const canManageWorkflow =
+    currentUser?.role === 'ADMIN' ||
+    (currentUser?.role === 'TECHNICIAN' && ticket?.assigneeId === currentUser?.id);
   const canDelete =
-    currentUser.role === 'ADMIN' ||
-    (ticket?.status === 'OPEN' && ticket?.submitterId === currentUser.id);
+    currentUser?.role === 'ADMIN' ||
+    (ticket?.status === 'OPEN' && ticket?.submitterId === currentUser?.id);
   const canEditOpen =
     ticket?.status === 'OPEN' &&
-    (currentUser.role === 'ADMIN' || ticket?.submitterId === currentUser.id);
+    (currentUser?.role === 'ADMIN' || ticket?.submitterId === currentUser?.id);
+  const technicianReadOnly =
+    currentUser?.role === 'TECHNICIAN' && !canManageWorkflow && ticket;
 
   if (loading) return (
     <div className="flex justify-center py-20">
@@ -258,86 +269,132 @@ const TicketDetails = () => {
           </div>
         </div>
 
-        {/* Right Column: Actions (For Admins/Technicians) */}
+        {/* Right column: student progress vs staff workflow */}
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-24">
-            <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
-              <FileText className="w-4 h-4 text-indigo-600" /> Management
-            </h3>
-
-            {canDelete && (
-              <button
-                type="button"
-                onClick={handleDeleteTicket}
-                className="w-full mb-4 py-2 flex items-center justify-center gap-2 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50"
-              >
-                <Trash2 className="w-4 h-4" /> Delete ticket
-              </button>
-            )}
-            
-            <div className="space-y-4">
-              <div>
-                <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Update Status</label>
-                <select 
-                  value={status}
-                  onChange={(e) => setStatus(e.target.value)}
-                  className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm font-medium"
-                >
-                  <option value="OPEN">Open</option>
-                  <option value="IN_PROGRESS">In Progress</option>
-                  <option value="RESOLVED">Resolved</option>
-                  <option value="CLOSED">Closed</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-              </div>
-
-              {(status === 'RESOLVED' || status === 'REJECTED' || status === 'CLOSED') && (
-                <div>
-                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Resolution / Rejection Notes</label>
-                  <textarea 
-                    value={resolutionNotes}
-                    onChange={(e) => setResolutionNotes(e.target.value)}
-                    className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm resize-none"
-                    rows={3}
-                    placeholder="Provide details..."
-                  ></textarea>
-                </div>
-              )}
-
-              <button 
-                onClick={handleUpdateStatus}
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium transition-colors"
-              >
-                Save Updates
-              </button>
-
-              {canAssign && (
-                <>
-                  <hr className="border-slate-100 my-4" />
-
-                  <div>
-                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">Assign Technician</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        value={assigneeId}
-                        onChange={(e) => setAssigneeId(e.target.value)}
-                        placeholder="Technician user id"
-                        className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm"
-                      />
-                      <button 
-                        type="button"
-                        onClick={handleAssign}
-                        className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-sm font-medium transition-colors border border-indigo-200"
-                      >
-                        Assign
-                      </button>
-                    </div>
-                  </div>
-                </>
-              )}
+          {isStudent && (
+            <div className="sticky top-24">
+              <TicketProgressStepper
+                status={ticket.status}
+                resolutionNotes={ticket.resolutionNotes}
+              />
+              <p className="text-xs text-slate-500 mt-3 px-1 leading-relaxed">
+                Admins move your ticket through the workflow. If it is <strong>rejected</strong>, the reason appears
+                above. You can still discuss it in comments below.
+              </p>
             </div>
-          </div>
+          )}
+
+          {technicianReadOnly && (
+            <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-5 text-sm text-amber-950 sticky top-24">
+              <p className="font-semibold">Read-only for you</p>
+              <p className="mt-2 text-amber-900/90">
+                This ticket is assigned to <strong>{ticket.assigneeId || '—'}</strong>. Only that technician (or an
+                admin) can change status here. Ask an admin to assign you if you should handle it.
+              </p>
+            </div>
+          )}
+
+          {canManageWorkflow && (
+            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 sticky top-24">
+              <h3 className="font-bold text-slate-800 mb-1 flex items-center gap-2">
+                <FileText className="w-4 h-4 text-indigo-600" /> Staff workflow
+              </h3>
+              <p className="text-xs text-slate-500 mb-4">
+                {isAdmin
+                  ? 'OPEN → IN_PROGRESS → RESOLVED → CLOSED, or REJECTED with a reason.'
+                  : 'As assignee: add resolution notes and move toward RESOLVED; admins handle rejection & assignment.'}
+              </p>
+
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={handleDeleteTicket}
+                  className="w-full mb-4 py-2 flex items-center justify-center gap-2 text-sm text-red-600 border border-red-200 rounded-xl hover:bg-red-50"
+                >
+                  <Trash2 className="w-4 h-4" /> Delete ticket
+                </button>
+              )}
+
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+                    Update status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm font-medium"
+                  >
+                    <option value="OPEN">Open</option>
+                    <option value="IN_PROGRESS">In progress</option>
+                    <option value="RESOLVED">Resolved</option>
+                    <option value="CLOSED">Closed</option>
+                    {(isAdmin || ticket.status === 'REJECTED') && (
+                      <option value="REJECTED">Rejected (requires reason)</option>
+                    )}
+                  </select>
+                </div>
+
+                {(status === 'RESOLVED' || status === 'REJECTED' || status === 'CLOSED') && (
+                  <div>
+                    <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+                      Resolution / rejection notes
+                    </label>
+                    <textarea
+                      value={resolutionNotes}
+                      onChange={(e) => setResolutionNotes(e.target.value)}
+                      className="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm resize-none"
+                      rows={3}
+                      placeholder={
+                        status === 'REJECTED'
+                          ? 'Reason students will see…'
+                          : 'What was fixed or verified…'
+                      }
+                    />
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={handleUpdateStatus}
+                  className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white rounded-xl text-sm font-medium transition-colors"
+                >
+                  Save updates
+                </button>
+
+                {canAssign && (
+                  <>
+                    <hr className="border-slate-100 my-4" />
+
+                    <div>
+                      <label className="text-xs font-semibold text-slate-500 uppercase tracking-wider block mb-2">
+                        Assign technician
+                      </label>
+                      <p className="text-[11px] text-slate-400 mb-2">
+                        Demo technician id: <code className="bg-slate-100 px-1 rounded">tech-jamith</code>
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={assigneeId}
+                          onChange={(e) => setAssigneeId(e.target.value)}
+                          placeholder="Technician user id"
+                          className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleAssign}
+                          className="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 rounded-xl text-sm font-medium transition-colors border border-indigo-200"
+                        >
+                          Assign
+                        </button>
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

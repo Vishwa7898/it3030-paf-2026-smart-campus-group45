@@ -2,6 +2,7 @@ package com.smartcampus.backend.services;
 
 import com.smartcampus.backend.dto.TicketCommentRequest;
 import com.smartcampus.backend.entity.TicketComment;
+import com.smartcampus.backend.exception.ForbiddenException;
 import com.smartcampus.backend.exception.ResourceNotFoundException;
 import com.smartcampus.backend.repository.TicketCommentRepository;
 import org.springframework.stereotype.Service;
@@ -20,8 +21,11 @@ public class TicketCommentService {
     }
 
     public TicketComment addComment(String ticketId, TicketCommentRequest request) {
-        // Verify ticket exists
-        ticketService.getTicketById(ticketId);
+        var ticket = ticketService.requireTicket(ticketId);
+        if ("USER".equalsIgnoreCase(request.getAuthorRole())
+                && !request.getAuthorId().equals(ticket.getSubmitterId())) {
+            throw new ForbiddenException("You can only comment on your own tickets");
+        }
 
         TicketComment comment = new TicketComment();
         comment.setTicketId(ticketId);
