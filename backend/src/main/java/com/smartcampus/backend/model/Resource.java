@@ -32,4 +32,6 @@ public class Resource {
 
     @NotNull(message = "Availability status is required")
     private Boolean available;
+
+    private String imageUrl;
 }

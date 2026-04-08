@@ -41,6 +41,7 @@ public class ResourceService {
         existingResource.setLocation(updatedResource.getLocation());
         existingResource.setCapacity(updatedResource.getCapacity());
         existingResource.setAvailable(updatedResource.getAvailable());
+        existingResource.setImageUrl(updatedResource.getImageUrl());
         
         return resourceRepository.save(existingResource);
     }

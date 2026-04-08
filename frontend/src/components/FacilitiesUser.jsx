@@ -11,16 +11,17 @@ const FacilitiesUser = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filterType, setFilterType] = useState('');
+  const [minCapacity, setMinCapacity] = useState(0);
+  const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [viewMode, setViewMode] = useState('grid');
 
   const resourceTypes = [
-    { value: '', label: 'All Types' },
-    { value: 'ROOM', label: 'Room' },
-    { value: 'LAB', label: 'Lab' },
-    { value: 'EQUIPMENT', label: 'Equipment' },
-    { value: 'LECTURE_HALL', label: 'Lecture Hall' },
-    { value: 'SPORTS_ROOM', label: 'Sports Room' }
+    { value: '', label: 'All Resources' },
+    { value: 'ROOM', label: 'Study Rooms' },
+    { value: 'LAB', label: 'Computer Labs' },
+    { value: 'EQUIPMENT', label: 'Technical Gear' },
+    { value: 'LECTURE_HALL', label: 'Lecture Halls' },
+    { value: 'SPORTS_ROOM', label: 'Sports Facilities' }
   ];
 
   useEffect(() => {
@@ -34,20 +35,22 @@ const FacilitiesUser = () => {
       const data = await facilityService.getAll(params);
       setFacilities(data);
     } catch (err) {
-      setError('Failed to load facilities');
-      console.error(err);
+      setError('Failed to load campus resources');
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredFacilities = facilities.filter(f => 
-    f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    f.location.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredFacilities = facilities.filter(f => {
+    const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                          f.location.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesCapacity = f.capacity >= minCapacity;
+    const matchesAvailability = showOnlyAvailable ? f.available : true;
+    return matchesSearch && matchesCapacity && matchesAvailability;
+  });
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-slate-100 p-8">
+    <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <header className="mb-12">
           <motion.div 
@@ -56,140 +59,183 @@ const FacilitiesUser = () => {
             className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6"
           >
             <div>
-              <h1 className="text-4xl font-black tracking-tight text-white">
-                Campus <span className="text-indigo-500">Facilities</span>
+              <h1 className="text-5xl font-black tracking-tighter text-white">
+                Campus <span className="text-indigo-500">Explorer</span>
               </h1>
-              <p className="text-slate-400 mt-2 text-lg">Explore and locate university resources</p>
+              <p className="text-slate-400 mt-2 text-xl font-medium">Discover and book university facilities in real-time</p>
             </div>
 
-            <div className="flex bg-slate-800/50 p-1 rounded-xl border border-slate-700/50">
-              <button 
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'grid' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white'}`}
-              >
-                <Grid size={20} />
-              </button>
-              <button 
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-all ${viewMode === 'list' ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' : 'text-slate-400 hover:text-white'}`}
-              >
-                <ListIcon size={20} />
-              </button>
-            </div>
-          </motion.div>
-
-          <motion.div 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4"
-          >
-            <div className="relative group col-span-2">
+            <div className="relative group w-full md:w-96">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-indigo-400 transition-colors" size={20} />
               <input 
                 type="text" 
-                placeholder="Search facilities by name or location..." 
+                placeholder="Search by name, building, or room..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700/50 pl-12 pr-4 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500/50 transition-all backdrop-blur-md"
+                className="w-full bg-slate-800/40 border border-slate-700/50 pl-12 pr-4 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all backdrop-blur-xl text-white placeholder:text-slate-500"
               />
-            </div>
-            
-            <div className="relative group">
-              <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={20} />
-              <select 
-                value={filterType}
-                onChange={(e) => setFilterType(e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700/50 pl-12 pr-4 py-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none backdrop-blur-md"
-              >
-                {resourceTypes.map(t => (
-                  <option key={t.value} value={t.value} className="bg-slate-900">{t.label}</option>
-                ))}
-              </select>
-              <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={18} />
             </div>
           </motion.div>
         </header>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="h-48 bg-slate-800/30 rounded-3xl animate-pulse border border-slate-700/30"></div>
-            ))}
-          </div>
-        ) : filteredFacilities.length > 0 ? (
-          <motion.div 
-            layout
-            className={viewMode === 'grid' 
-              ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" 
-              : "flex flex-col gap-4"
-            }
-          >
-            <AnimatePresence>
-              {filteredFacilities.map((facility, index) => (
-                <motion.div
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{ duration: 0.2, delay: index * 0.05 }}
-                  key={facility.id}
-                  className={`group bg-gradient-to-br from-slate-800/40 to-slate-900/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden hover:border-indigo-500/50 transition-all duration-500 ${viewMode === 'list' ? 'flex items-center p-4' : 'p-8'}`}
-                >
-                  <div className={`flex flex-col h-full ${viewMode === 'list' ? 'flex-row items-center w-full' : ''}`}>
-                    <div className={`p-4 bg-indigo-500/10 rounded-2xl text-indigo-400 mb-6 group-hover:scale-110 transition-transform duration-500 w-fit ${viewMode === 'list' ? 'mb-0 mr-6' : ''}`}>
-                      <Box size={28} />
-                    </div>
+        <div className="flex flex-col lg:flex-row gap-8">
+          {/* Filter Sidebar */}
+          <aside className="w-full lg:w-72 flex-shrink-0">
+            <motion.div 
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 sticky top-24"
+            >
+              <div className="flex items-center gap-2 mb-8 text-indigo-400">
+                <Filter size={20} />
+                <h2 className="text-lg font-black uppercase tracking-widest">Filters</h2>
+              </div>
 
-                    <div className="flex-grow">
-                      <div className="flex items-center justify-between gap-4 mb-2">
-                        <h3 className="text-xl font-bold text-white group-hover:text-indigo-400 transition-colors uppercase tracking-wide">
+              <div className="space-y-8">
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Resource Type</label>
+                  <div className="flex flex-col gap-2">
+                    {resourceTypes.map(type => (
+                      <button
+                        key={type.value}
+                        onClick={() => setFilterType(type.value)}
+                        className={`text-left px-4 py-3 rounded-xl text-sm font-bold transition-all ${
+                          filterType === type.value 
+                          ? 'bg-indigo-600 text-white shadow-lg shadow-indigo-500/20' 
+                          : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                        }`}
+                      >
+                        {type.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-3">Min Capacity</label>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="100" 
+                    step="5"
+                    value={minCapacity}
+                    onChange={(e) => setMinCapacity(parseInt(e.target.value))}
+                    className="w-full accent-indigo-500 bg-slate-700 rounded-lg cursor-pointer transition-all"
+                  />
+                  <div className="flex justify-between mt-2 text-xs font-black text-indigo-400">
+                    <span>{minCapacity} Seats</span>
+                    <span>100+</span>
+                  </div>
+                </div>
+
+                <div className="pt-4 border-t border-slate-700/50">
+                  <button 
+                    onClick={() => setShowOnlyAvailable(!showOnlyAvailable)}
+                    className={`w-full flex items-center justify-between p-4 rounded-2xl border transition-all ${
+                      showOnlyAvailable 
+                      ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400' 
+                      : 'bg-slate-900/50 border-slate-700 text-slate-400'
+                    }`}
+                  >
+                    <span className="text-sm font-black">Available Only</span>
+                    {showOnlyAvailable ? <CheckCircle2 size={18} /> : <div className="w-4 h-4 rounded-full border-2 border-slate-700" />}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </aside>
+
+          {/* Gallery */}
+          <main className="flex-grow">
+            {loading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[1, 2, 4, 5].map(i => (
+                  <div key={i} className="h-80 bg-slate-800/20 rounded-3xl animate-pulse border border-slate-700/30"></div>
+                ))}
+              </div>
+            ) : filteredFacilities.length > 0 ? (
+              <motion.div 
+                layout
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              >
+                <AnimatePresence mode='popLayout'>
+                  {filteredFacilities.map((facility, index) => (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.9 }}
+                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                      key={facility.id}
+                      className="group bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden hover:border-indigo-500/50 transition-all duration-500 shadow-xl flex flex-col"
+                    >
+                      <div className="relative h-48 overflow-hidden">
+                        <img 
+                          src={facility.imageUrl || `https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=800&auto=format&fit=crop`} 
+                          alt={facility.name}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
+                        
+                        <div className={`absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest border backdrop-blur-md ${
+                          facility.available 
+                          ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
+                          : 'bg-red-500/20 text-red-400 border-red-500/30'
+                        }`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${facility.available ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
+                          {facility.available ? 'AVAILABLE' : 'OCCUPIED'}
+                        </div>
+
+                        <div className="absolute bottom-4 left-4">
+                          <span className="px-2 py-1 bg-indigo-600/80 backdrop-blur-sm text-[10px] font-black text-white rounded uppercase tracking-wider">
+                            {facility.type.replace('_', ' ')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="p-6 flex-grow flex flex-col">
+                        <h3 className="text-2xl font-black text-white group-hover:text-indigo-400 transition-colors mb-4 leading-tight">
                           {facility.name}
                         </h3>
-                        {viewMode === 'grid' && (
-                          <div className={`flex items-center gap-1 text-xs font-black px-3 py-1 rounded-full ${
-                            facility.available ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-red-500/10 text-red-400 border border-red-500/20'
-                          }`}>
-                            {facility.available ? <CheckCircle2 size={12} /> : <XCircle size={12} />}
-                            {facility.available ? 'OPEN' : 'CLOSED'}
+
+                        <div className="space-y-3 mt-auto">
+                          <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-300 transition-colors">
+                            <div className="p-2 bg-slate-900 rounded-lg border border-slate-700">
+                              <MapPin size={16} className="text-indigo-400" />
+                            </div>
+                            <span className="text-sm font-bold">{facility.location}</span>
                           </div>
-                        )}
-                      </div>
+                          <div className="flex items-center gap-3 text-slate-400 group-hover:text-slate-300 transition-colors">
+                            <div className="p-2 bg-slate-900 rounded-lg border border-slate-700">
+                              <Users size={16} className="text-indigo-400" />
+                            </div>
+                            <span className="text-sm font-bold">{facility.capacity} Seats Available</span>
+                          </div>
+                        </div>
 
-                      <div className={`flex flex-wrap gap-x-6 gap-y-2 text-slate-400 ${viewMode === 'list' ? 'mb-0' : 'mt-4'}`}>
-                        <div className="flex items-center gap-2">
-                          <MapPin size={16} className="text-indigo-500/60" />
-                          <span className="text-sm font-medium">{facility.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users size={16} className="text-indigo-500/60" />
-                          <span className="text-sm font-medium">{facility.capacity} People</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Info size={16} className="text-indigo-500/60" />
-                          <span className="text-sm font-medium">{facility.type.replace('_', ' ')}</span>
-                        </div>
+                        <button className="w-full mt-6 py-4 bg-slate-700/50 hover:bg-indigo-600 border border-slate-600/50 hover:border-indigo-400 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2">
+                          View Details
+                        </button>
                       </div>
-                    </div>
-
-                    {viewMode === 'list' && (
-                      <div className={`ml-auto flex items-center gap-1 text-xs font-black px-4 py-2 rounded-xl border ${
-                        facility.available ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-red-500/10 text-red-400 border-red-500/20'
-                      }`}>
-                        {facility.available ? 'AVAILABLE' : 'RESERVED'}
-                      </div>
-                    )}
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        ) : (
-          <div className="text-center py-32 bg-slate-800/20 rounded-3xl border border-dashed border-slate-700">
-            <h2 className="text-2xl font-bold text-slate-500">No matching facilities found</h2>
-            <p className="text-slate-600 mt-2">Try adjusting your search or filters</p>
-          </div>
-        )}
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
+              </motion.div>
+            ) : (
+              <div className="text-center py-40 bg-slate-800/20 rounded-3xl border border-dashed border-slate-700 flex flex-col items-center justify-center">
+                <Box size={48} className="text-slate-700 mb-4" />
+                <h2 className="text-2xl font-bold text-slate-500 uppercase tracking-tighter">No facilities matching filters</h2>
+                <p className="text-slate-600 mt-2 font-medium">Try broadening your search or adjusting the minimum capacity</p>
+                <button 
+                  onClick={() => { setFilterType(''); setMinCapacity(0); setShowOnlyAvailable(false); setSearchQuery(''); }}
+                  className="mt-6 text-indigo-400 font-black text-xs uppercase tracking-widest hover:text-indigo-300"
+                >
+                  Clear All Filters
+                </button>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
     </div>
   );
