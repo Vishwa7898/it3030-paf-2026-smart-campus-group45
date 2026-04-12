@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { facilityService } from '../services/facilityService';
+import AnalyticsDashboard from './AnalyticsDashboard';
 import { 
   Plus, Edit2, Trash2, Search, X, Check, AlertCircle, 
-  MapPin, Users, Info, Box, ChevronDown
+  MapPin, Users, Info, Box, ChevronDown, BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -12,16 +13,20 @@ const FacilitiesAdmin = () => {
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState(null);
+  const [activeTab, setActiveTab] = useState('inventory');
   const [formData, setFormData] = useState({
     name: '',
     type: 'ROOM',
     location: '',
     capacity: 1,
-    available: true,
+    status: 'ACTIVE',
+    description: '',
+    amenities: [],
     imageUrl: ''
   });
 
   const resourceTypes = ['ROOM', 'LAB', 'EQUIPMENT', 'LECTURE_HALL', 'SPORTS_ROOM'];
+  const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'INACTIVE'];
 
   useEffect(() => {
     fetchFacilities();
@@ -45,10 +50,10 @@ const FacilitiesAdmin = () => {
   };
 
   const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
+    const { name, value, type } = e.target;
     setFormData({
       ...formData,
-      [name]: type === 'checkbox' ? checked : type === 'number' ? parseInt(value) : value
+      [name]: type === 'number' ? parseInt(value) : value
     });
   };
 
@@ -76,7 +81,9 @@ const FacilitiesAdmin = () => {
       type: facility.type,
       location: facility.location,
       capacity: facility.capacity,
-      available: facility.available,
+      status: facility.status || 'ACTIVE',
+      description: facility.description || '',
+      amenities: facility.amenities || [],
       imageUrl: facility.imageUrl || ''
     });
     setIsModalOpen(true);
@@ -99,7 +106,9 @@ const FacilitiesAdmin = () => {
       type: 'ROOM',
       location: '',
       capacity: 1,
-      available: true,
+      status: 'ACTIVE',
+      description: '',
+      amenities: [],
       imageUrl: ''
     });
   };
@@ -107,7 +116,7 @@ const FacilitiesAdmin = () => {
   // Quick Stats Calculation
   const stats = {
     total: facilities.length,
-    available: facilities.filter(f => f.available).length,
+    active: facilities.filter(f => f.status === 'ACTIVE').length,
     totalCapacity: facilities.reduce((acc, f) => acc + (f.capacity || 0), 0)
   };
 
@@ -128,7 +137,7 @@ const FacilitiesAdmin = () => {
             <p className="text-slate-400 mt-3 text-lg font-medium">Campus Resource Management System</p>
           </motion.div>
           
-          <div className="flex gap-4">
+          {activeTab === 'inventory' && (
             <motion.button
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
@@ -142,36 +151,33 @@ const FacilitiesAdmin = () => {
               <Plus size={20} />
               Add New Resource
             </motion.button>
-            <button className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-slate-300 px-6 py-4 rounded-2xl font-bold transition-all border border-slate-700">
-              <Plus size={20} className="rotate-45" />
-              Generate Reports
-            </button>
-          </div>
+          )}
         </header>
 
-        {/* Quick Stats Dashboard */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {[
-            { label: 'Total Resources', value: stats.total, icon: <Box className="text-blue-400" />, color: 'from-blue-500/10 to-transparent' },
-            { label: 'Available Rooms', value: stats.available, icon: <Check className="text-emerald-400" />, color: 'from-emerald-500/10 to-transparent' },
-            { label: 'Campus Capacity', value: stats.totalCapacity, icon: <Users className="text-purple-400" />, color: 'from-purple-500/10 to-transparent' }
-          ].map((stat, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className={`bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 p-6 rounded-3xl bg-gradient-to-br ${stat.color}`}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="p-3 bg-slate-900/50 rounded-2xl border border-slate-700/50">
-                  {stat.icon}
-                </div>
-              </div>
-              <h4 className="text-slate-400 font-semibold uppercase tracking-wider text-xs">{stat.label}</h4>
-              <p className="text-4xl font-black mt-1 text-white">{stat.value}</p>
-            </motion.div>
-          ))}
+        {/* Tabs */}
+        <div className="flex gap-4 mb-8 border-b border-slate-700/50">
+          <button
+            onClick={() => setActiveTab('inventory')}
+            className={`px-6 py-4 font-bold transition-all ${activeTab === 'inventory' 
+              ? 'text-indigo-400 border-b-2 border-indigo-500' 
+              : 'text-slate-400 hover:text-slate-300'}`}
+          >
+            <div className="flex items-center gap-2">
+              <Box size={20} />
+              Inventory Management
+            </div>
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-6 py-4 font-bold transition-all ${activeTab === 'analytics' 
+              ? 'text-indigo-400 border-b-2 border-indigo-500' 
+              : 'text-slate-400 hover:text-slate-300'}`}
+          >
+            <div className="flex items-center gap-2">
+              <BarChart3 size={20} />
+              Analytics & Reports
+            </div>
+          </button>
         </div>
 
         {error && (
@@ -185,88 +191,120 @@ const FacilitiesAdmin = () => {
           </motion.div>
         )}
 
-        {/* Inventory Table */}
-        <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden shadow-2xl">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="bg-slate-900/50 text-slate-400 border-b border-slate-700/50">
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">ID</th>
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Resource Name</th>
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Type</th>
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Location</th>
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-center">Capacity</th>
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-center">Status</th>
-                  <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-700/30">
-                {loading ? (
-                  Array(5).fill(0).map((_, i) => (
-                    <tr key={i} className="animate-pulse">
-                      <td colSpan="7" className="px-6 py-6 h-12 bg-slate-800/30"></td>
+        {activeTab === 'inventory' ? (
+          <>
+            {/* Quick Stats Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+              {[
+                { label: 'Total Resources', value: stats.total, icon: <Box className="text-blue-400" />, color: 'from-blue-500/10 to-transparent' },
+                { label: 'Active Resources', value: stats.active, icon: <Check className="text-emerald-400" />, color: 'from-emerald-500/10 to-transparent' },
+                { label: 'Total Capacity', value: stats.totalCapacity, icon: <Users className="text-purple-400" />, color: 'from-purple-500/10 to-transparent' }
+              ].map((stat, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: i * 0.1 }}
+                  className={`bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 p-6 rounded-3xl bg-gradient-to-br ${stat.color}`}
+                >
+                  <div className="flex justify-between items-start mb-4">
+                    <div className="p-3 bg-slate-900/50 rounded-2xl border border-slate-700/50">
+                      {stat.icon}
+                    </div>
+                  </div>
+                  <h4 className="text-slate-400 font-semibold uppercase tracking-wider text-xs">{stat.label}</h4>
+                  <p className="text-4xl font-black mt-1 text-white">{stat.value}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            {/* Inventory Table */}
+            <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl overflow-hidden shadow-2xl">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse">
+                  <thead>
+                    <tr className="bg-slate-900/50 text-slate-400 border-b border-slate-700/50">
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">ID</th>
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Resource Name</th>
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Type</th>
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs">Location</th>
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-center">Capacity</th>
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-center">Status</th>
+                      <th className="px-6 py-5 font-bold uppercase tracking-wider text-xs text-right">Actions</th>
                     </tr>
-                  ))
-                ) : facilities.length > 0 ? (
-                  facilities.map((resource, index) => (
-                    <motion.tr 
-                      key={resource.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="hover:bg-slate-700/20 transition-colors"
-                    >
-                      <td className="px-6 py-5 font-mono text-xs text-slate-500">{resource.id?.substring(0, 8)}...</td>
-                      <td className="px-6 py-5 font-bold text-slate-200">{resource.name}</td>
-                      <td className="px-6 py-5">
-                        <span className="px-3 py-1 bg-slate-700/50 rounded-full text-xs font-medium text-slate-300 border border-slate-600/30">
-                          {resource.type.replace('_', ' ')}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-slate-400 flex items-center gap-2">
-                        <MapPin size={14} className="text-indigo-500/60" />
-                        {resource.location}
-                      </td>
-                      <td className="px-6 py-5 text-center font-bold text-slate-300">{resource.capacity}</td>
-                      <td className="px-6 py-5 text-center">
-                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black border ${
-                          resource.available 
-                          ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                          : 'bg-red-500/10 text-red-400 border-red-500/20'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${resource.available ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
-                          {resource.available ? 'AVAILABLE' : 'IN USE'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <div className="flex justify-end gap-2 text-slate-400">
-                          <button 
-                            onClick={() => handleEdit(resource)}
-                            className="p-2 hover:bg-indigo-500/20 hover:text-indigo-400 rounded-xl transition-all"
-                          >
-                            <Edit2 size={18} />
-                          </button>
-                          <button 
-                            onClick={() => handleDelete(resource.id)}
-                            className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all"
-                          >
-                            <Trash2 size={18} />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan="7" className="px-6 py-20 text-center text-slate-500 font-medium">
-                      No resources found. Click "Add New Resource" to populate the inventory.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
+                  <tbody className="divide-y divide-slate-700/30">
+                    {loading ? (
+                      Array(5).fill(0).map((_, i) => (
+                        <tr key={i} className="animate-pulse">
+                          <td colSpan="7" className="px-6 py-6 h-12 bg-slate-800/30"></td>
+                        </tr>
+                      ))
+                    ) : facilities.length > 0 ? (
+                      facilities.map((resource, index) => (
+                        <motion.tr 
+                          key={resource.id}
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          transition={{ delay: index * 0.05 }}
+                          className="hover:bg-slate-700/20 transition-colors"
+                        >
+                          <td className="px-6 py-5 font-mono text-xs text-slate-500">{resource.id?.substring(0, 8)}...</td>
+                          <td className="px-6 py-5 font-bold text-slate-200">{resource.name}</td>
+                          <td className="px-6 py-5">
+                            <span className="px-3 py-1 bg-slate-700/50 rounded-full text-xs font-medium text-slate-300 border border-slate-600/30">
+                              {resource.type.replace('_', ' ')}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-slate-400 flex items-center gap-2">
+                            <MapPin size={14} className="text-indigo-500/60" />
+                            {resource.location}
+                          </td>
+                          <td className="px-6 py-5 text-center font-bold text-slate-300">{resource.capacity}</td>
+                          <td className="px-6 py-5 text-center">
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black border ${
+                              resource.status === 'ACTIVE' 
+                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
+                              : 'bg-red-500/10 text-red-400 border-red-500/20'
+                            }`}>
+                              <span className={`w-1.5 h-1.5 rounded-full ${resource.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
+                              {resource.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-5 text-right">
+                            <div className="flex justify-end gap-2 text-slate-400">
+                              <button 
+                                onClick={() => handleEdit(resource)}
+                                className="p-2 hover:bg-indigo-500/20 hover:text-indigo-400 rounded-xl transition-all"
+                              >
+                                <Edit2 size={18} />
+                              </button>
+                              <button 
+                                onClick={() => handleDelete(resource.id)}
+                                className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all"
+                              >
+                                <Trash2 size={18} />
+                              </button>
+                            </div>
+                          </td>
+                        </motion.tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="7" className="px-6 py-20 text-center text-slate-500 font-medium">
+                          No resources found. Click "Add New Resource" to populate the inventory.
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        ) : (
+          // Analytics Tab
+          <AnalyticsDashboard />
+        )}
       </div>
 
       {/* Resource Modal */}
@@ -333,7 +371,7 @@ const FacilitiesAdmin = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Internal Location</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Location</label>
                     <input
                       required
                       type="text"
@@ -345,7 +383,7 @@ const FacilitiesAdmin = () => {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Max Capacity</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Capacity</label>
                     <input
                       required
                       type="number"
@@ -359,6 +397,34 @@ const FacilitiesAdmin = () => {
                 </div>
 
                 <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Status</label>
+                  <div className="relative">
+                    <select
+                      name="status"
+                      value={formData.status}
+                      onChange={handleInputChange}
+                      className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white appearance-none cursor-pointer"
+                    >
+                      {resourceStatus.map(status => (
+                        <option key={status} value={status} className="bg-slate-900">{status}</option>
+                      ))}
+                    </select>
+                    <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Description</label>
+                  <textarea
+                    name="description"
+                    value={formData.description}
+                    onChange={handleInputChange}
+                    className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white placeholder:text-slate-600 h-24"
+                    placeholder="Brief description of the resource..."
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Image URL</label>
                   <input
                     type="url"
@@ -368,16 +434,7 @@ const FacilitiesAdmin = () => {
                     className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white placeholder:text-slate-600"
                     placeholder="https://images.unsplash.com/..."
                   />
-                  <p className="text-slate-500 text-xs mt-2 italic">Paste a direct link to a high-quality facility image for the student gallery.</p>
-                </div>
-
-                <div className="flex items-center gap-4 bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 group cursor-pointer" 
-                     onClick={() => setFormData(prev => ({ ...prev, available: !prev.available }))}>
-                  <div className={`w-12 h-6 rounded-full relative transition-all duration-300 ${formData.available ? 'bg-indigo-600' : 'bg-slate-700'}`}>
-                    <div className={`absolute top-1 w-4 h-4 rounded-full bg-white transition-all duration-300 ${formData.available ? 'left-7' : 'left-1'}`} />
-                  </div>
-                  <span className="text-sm font-bold text-slate-300 group-hover:text-white transition-colors">Mark as Available for Student Discovery</span>
-                  <input type="checkbox" name="available" checked={formData.available} onChange={handleInputChange} className="hidden" />
+                  <p className="text-slate-500 text-xs mt-2 italic">Paste a direct link to a high-quality facility image.</p>
                 </div>
 
                 <button
@@ -385,7 +442,7 @@ const FacilitiesAdmin = () => {
                   className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-indigo-500/40 transition-all mt-4 border border-indigo-400/20 flex items-center justify-center gap-2"
                 >
                   {editingFacility ? <Check size={24} /> : <Plus size={24} />}
-                  {editingFacility ? 'Update Resource Records' : 'Save New Resource'}
+                  {editingFacility ? 'Update Resource' : 'Create Resource'}
                 </button>
               </form>
             </motion.div>

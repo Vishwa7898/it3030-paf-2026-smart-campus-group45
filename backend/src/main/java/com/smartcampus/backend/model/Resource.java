@@ -9,6 +9,13 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+/**
+ * Resource entity representing bookable facilities and assets.
+ * Implements Module A: Facilities & Assets Catalogue requirements.
+ */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -30,8 +37,24 @@ public class Resource {
     @Min(value = 1, message = "Capacity must be at least 1")
     private Integer capacity;
 
-    @NotNull(message = "Availability status is required")
-    private Boolean available;
+    @NotNull(message = "Resource status is required")
+    private ResourceStatus status = ResourceStatus.ACTIVE;
 
+    private String description;
+    private List<String> amenities;
     private String imageUrl;
+
+    // Availability window for operational hours
+    private AvailabilityWindow availabilityWindow;
+
+    // Metadata timestamps
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
+    // Optional fields for advanced features
+    private String floor;
+    private String building;
+    private Double dailyCost;
+    private String contactPerson;
+    private String phoneNumber;
 }
