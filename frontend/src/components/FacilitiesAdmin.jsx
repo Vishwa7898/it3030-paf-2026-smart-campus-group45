@@ -39,7 +39,7 @@ const FacilitiesAdmin = () => {
     'AUDITORIUM',
     'SEMINAR_ROOM'
   ];
-  const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'INACTIVE'];
+  const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'UNDER_REPAIR', 'DECOMMISSIONED', 'RESERVED', 'INACTIVE'];
   const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
   const isCapacityRequired = useMemo(
@@ -455,25 +455,29 @@ const FacilitiesAdmin = () => {
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Name</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Name *</label>
                     <input
                       required
+                      ref={nameInputRef}
                       type="text"
                       name="name"
                       value={formData.name}
                       onChange={handleInputChange}
+                      onBlur={validateForm}
                       className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500 transition-all text-white placeholder:text-slate-600"
                       placeholder="e.g. Advanced Physics Lab"
                     />
+                    {fieldErrors.name && <p className="text-red-400 text-xs mt-2">{fieldErrors.name}</p>}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Type</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Type *</label>
                     <div className="relative">
                       <select
                         name="type"
                         value={formData.type}
                         onChange={handleInputChange}
+                        onBlur={validateForm}
                         className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white appearance-none cursor-pointer"
                       >
                         {resourceTypes.map(type => (
@@ -482,43 +486,53 @@ const FacilitiesAdmin = () => {
                       </select>
                       <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
                     </div>
+                    {fieldErrors.type && <p className="text-red-400 text-xs mt-2">{fieldErrors.type}</p>}
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Location</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Location *</label>
                     <input
                       required
                       type="text"
                       name="location"
                       value={formData.location}
                       onChange={handleInputChange}
+                      onBlur={validateForm}
                       className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white placeholder:text-slate-600"
                       placeholder="e.g. Building C, Room 204"
                     />
+                    <p className="text-slate-500 text-xs mt-2 italic">Use format like Building A, Floor 2, Room 201.</p>
+                    {fieldErrors.location && <p className="text-red-400 text-xs mt-2">{fieldErrors.location}</p>}
                   </div>
                   <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Capacity</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                      Capacity {isCapacityRequired ? '*' : '(optional)'}
+                    </label>
                     <input
-                      required
                       type="number"
                       name="capacity"
                       min="1"
+                      max="10000"
                       value={formData.capacity}
                       onChange={handleInputChange}
+                      onBlur={validateForm}
                       className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white"
                     />
+                    <p className="text-slate-500 text-xs mt-2 italic">Enter seats/resources count between 1 and 10,000.</p>
+                    {fieldErrors.capacity && <p className="text-red-400 text-xs mt-2">{fieldErrors.capacity}</p>}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Status</label>
+                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Status *</label>
                   <div className="relative">
                     <select
                       name="status"
                       value={formData.status}
                       onChange={handleInputChange}
+                      onBlur={validateForm}
                       className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white appearance-none cursor-pointer"
                     >
                       {resourceStatus.map(status => (
@@ -527,6 +541,7 @@ const FacilitiesAdmin = () => {
                     </select>
                     <ChevronDown className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={20} />
                   </div>
+                  {fieldErrors.status && <p className="text-red-400 text-xs mt-2">{fieldErrors.status}</p>}
                 </div>
 
                 <div>
@@ -535,28 +550,40 @@ const FacilitiesAdmin = () => {
                     name="description"
                     value={formData.description}
                     onChange={handleInputChange}
+                    onBlur={validateForm}
                     className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white placeholder:text-slate-600 h-24"
                     placeholder="Brief description of the resource..."
                   />
+                  <p className="text-slate-500 text-xs mt-2 italic">{formData.description.length}/1000</p>
+                  {fieldErrors.description && <p className="text-red-400 text-xs mt-2">{fieldErrors.description}</p>}
                 </div>
 
                 <div>
                     <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Image</label>
                   <input
                     type="file"
-                    accept=".jpg,.jpeg,.png,.webp"
-                    onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
+                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    onChange={handleImageChange}
                     className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-600 file:text-white file:font-semibold hover:file:bg-indigo-500"
                   />
-                  <p className="text-slate-500 text-xs mt-2 italic">Select an image file from your PC (jpg, jpeg, png, webp).</p>
+                  <p className="text-slate-500 text-xs mt-2 italic">Select an image file from your PC (JPG, PNG, WEBP, GIF), max 5MB.</p>
+                  {fieldErrors.image && <p className="text-red-400 text-xs mt-2">{fieldErrors.image}</p>}
+                  {imagePreview && (
+                    <img
+                      src={imagePreview}
+                      alt="Selected preview"
+                      className="mt-4 h-40 w-full object-cover rounded-2xl border border-slate-700/50"
+                    />
+                  )}
                 </div>
 
                 <button
                   type="submit"
-                  className="w-full bg-indigo-600 hover:bg-indigo-500 text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-indigo-500/40 transition-all mt-4 border border-indigo-400/20 flex items-center justify-center gap-2"
+                  disabled={isSubmitting}
+                  className="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:cursor-not-allowed text-white py-5 rounded-2xl font-black text-xl shadow-2xl shadow-indigo-500/40 transition-all mt-4 border border-indigo-400/20 flex items-center justify-center gap-2"
                 >
                   {editingFacility ? <Check size={24} /> : <Plus size={24} />}
-                  {editingFacility ? 'Update Resource' : 'Create Resource'}
+                  {isSubmitting ? 'Saving...' : editingFacility ? 'Update Resource' : 'Create Resource'}
                 </button>
               </form>
             </motion.div>

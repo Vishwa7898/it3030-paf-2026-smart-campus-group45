@@ -8,6 +8,9 @@ public enum ResourceStatus {
     ACTIVE("Active and available for booking"),
     OUT_OF_SERVICE("Out of service - temporarily unavailable"),
     MAINTENANCE("Under maintenance"),
+    UNDER_REPAIR("Under repair"),
+    DECOMMISSIONED("Permanently retired from service"),
+    RESERVED("Reserved for scheduled use"),
     INACTIVE("Inactive - no longer in use");
 
     private final String description;
