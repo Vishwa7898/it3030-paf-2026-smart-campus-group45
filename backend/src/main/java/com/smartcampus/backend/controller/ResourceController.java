@@ -3,12 +3,15 @@ package com.smartcampus.backend.controller;
 import com.smartcampus.backend.model.Resource;
 import com.smartcampus.backend.model.ResourceStatus;
 import com.smartcampus.backend.model.ResourceType;
+import com.smartcampus.backend.service.FileStorageService;
 import com.smartcampus.backend.service.ResourceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -34,6 +37,7 @@ import java.util.List;
 @CrossOrigin(origins = "*") // For local development
 public class ResourceController {
     private final ResourceService resourceService;
+    private final FileStorageService fileStorageService;
 
     /**
 * CREATE: POST /api/resources
@@ -42,7 +46,19 @@ public class ResourceController {
      * @param resource Resource object to create
      * @return Created resource with HTTP 201
      */
-    @PostMapping
+    @PostMapping(consumes = {"multipart/form-data"})
+    public ResponseEntity<Resource> createResource(
+            @Valid @ModelAttribute Resource resource,
+            @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+        if (file != null && !file.isEmpty()) {
+            String imagePath = fileStorageService.storeFile(file);
+            resource.setImageUrl(imagePath);
+        }
+
+        return new ResponseEntity<>(resourceService.createResource(resource), HttpStatus.CREATED);
+    }
+
+    @PostMapping(consumes = {"application/json"})
     public ResponseEntity<Resource> createResource(@Valid @RequestBody Resource resource) {
         return new ResponseEntity<>(resourceService.createResource(resource), HttpStatus.CREATED);
     }
@@ -124,11 +140,24 @@ public class ResourceController {
      * @param resource Updated resource object
      * @return Updated resource
      */
-    @PutMapping("/{id}")
+    @PutMapping(value = "/{id}", consumes = {"multipart/form-data"})
+    public ResponseEntity<Resource> updateResource(
+            @PathVariable String id,
+            @Valid @ModelAttribute Resource resource,
+            @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
+        if (file != null && !file.isEmpty()) {
+            String imagePath = fileStorageService.storeFile(file);
+            resource.setImageUrl(imagePath);
+        }
+
+        return ResponseEntity.ok(resourceService.replaceResource(id, resource));
+    }
+
+    @PutMapping(value = "/{id}", consumes = {"application/json"})
     public ResponseEntity<Resource> updateResource(
             @PathVariable String id,
             @Valid @RequestBody Resource resource) {
-        return ResponseEntity.ok(resourceService.updateResource(id, resource));
+        return ResponseEntity.ok(resourceService.replaceResource(id, resource));
     }
 
     /**

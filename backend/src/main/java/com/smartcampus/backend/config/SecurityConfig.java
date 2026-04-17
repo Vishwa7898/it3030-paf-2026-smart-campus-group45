@@ -2,10 +2,16 @@ package com.smartcampus.backend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
@@ -18,9 +24,34 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/resources/**").permitAll() // Permits all for simulation, role checks on methods
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/resources/**", "/uploads/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/api/resources/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PATCH, "/api/resources/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
-            );
+            )
+            .httpBasic(httpBasic -> {});
         return http.build();
+    }
+
+    @Bean
+    public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
+        return new InMemoryUserDetailsManager(
+                User.withUsername("admin")
+                        .password(passwordEncoder.encode("admin123"))
+                        .roles("ADMIN")
+                        .build(),
+                User.withUsername("user")
+                        .password(passwordEncoder.encode("user123"))
+                        .roles("USER")
+                        .build()
+        );
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
     }
 }

@@ -2,11 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { facilityService } from '../services/facilityService';
 import { 
   Search, Filter, MapPin, Users, Info, Box, 
-  ChevronDown, Grid, List as ListIcon, CheckCircle2, XCircle
+  CheckCircle2, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FacilitiesUser = () => {
+  const API_BASE_URL = 'http://localhost:8080';
+  const FALLBACK_IMAGE = 'https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=800&auto=format&fit=crop';
   const [facilities, setFacilities] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,6 +16,7 @@ const FacilitiesUser = () => {
   const [minCapacity, setMinCapacity] = useState(0);
   const [showOnlyAvailable, setShowOnlyAvailable] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [selectedFacility, setSelectedFacility] = useState(null);
 
   const resourceTypes = [
     { value: '', label: 'All Resources' },
@@ -45,9 +48,18 @@ const FacilitiesUser = () => {
     const matchesSearch = f.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
                           f.location.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesCapacity = f.capacity >= minCapacity;
-    const matchesAvailability = showOnlyAvailable ? f.available : true;
+    const isAvailable = f.status === 'ACTIVE';
+    const matchesAvailability = showOnlyAvailable ? isAvailable : true;
     return matchesSearch && matchesCapacity && matchesAvailability;
   });
+
+  const resolveImageUrl = (imageUrl) => {
+    if (!imageUrl) return FALLBACK_IMAGE;
+    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+      return imageUrl;
+    }
+    return `${API_BASE_URL}${imageUrl}`;
+  };
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-8">
@@ -171,19 +183,22 @@ const FacilitiesUser = () => {
                     >
                       <div className="relative h-48 overflow-hidden">
                         <img 
-                          src={facility.imageUrl || `https://images.unsplash.com/photo-1541339907198-e08756ebafe3?q=80&w=800&auto=format&fit=crop`} 
+                          src={resolveImageUrl(facility.imageUrl)}
                           alt={facility.name}
+                          onError={(e) => {
+                            e.currentTarget.src = FALLBACK_IMAGE;
+                          }}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
                         
                         <div className={`absolute top-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-black tracking-widest border backdrop-blur-md ${
-                          facility.available 
+                          facility.status === 'ACTIVE'
                           ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/30' 
                           : 'bg-red-500/20 text-red-400 border-red-500/30'
                         }`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${facility.available ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
-                          {facility.available ? 'AVAILABLE' : 'OCCUPIED'}
+                          <div className={`w-1.5 h-1.5 rounded-full ${facility.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
+                          {facility.status === 'ACTIVE' ? 'AVAILABLE' : facility.status}
                         </div>
 
                         <div className="absolute bottom-4 left-4">
@@ -213,7 +228,10 @@ const FacilitiesUser = () => {
                           </div>
                         </div>
 
-                        <button className="w-full mt-6 py-4 bg-slate-700/50 hover:bg-indigo-600 border border-slate-600/50 hover:border-indigo-400 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2">
+                        <button
+                          onClick={() => setSelectedFacility(facility)}
+                          className="w-full mt-6 py-4 bg-slate-700/50 hover:bg-indigo-600 border border-slate-600/50 hover:border-indigo-400 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2"
+                        >
                           View Details
                         </button>
                       </div>
@@ -237,6 +255,59 @@ const FacilitiesUser = () => {
           </main>
         </div>
       </div>
+
+      <AnimatePresence>
+        {selectedFacility && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setSelectedFacility(null)}
+              className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              className="bg-slate-900 border border-slate-700/50 p-6 rounded-3xl w-full max-w-2xl relative z-10 shadow-2xl"
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-2xl font-black text-white">{selectedFacility.name}</h3>
+                <button
+                  onClick={() => setSelectedFacility(null)}
+                  className="p-2 hover:bg-slate-800 rounded-xl text-slate-400 hover:text-white transition-all"
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <img
+                src={resolveImageUrl(selectedFacility.imageUrl)}
+                alt={selectedFacility.name}
+                onError={(e) => {
+                  e.currentTarget.src = FALLBACK_IMAGE;
+                }}
+                className="w-full h-64 object-cover rounded-2xl border border-slate-700/50 mb-5"
+              />
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-slate-300">
+                <p><span className="text-slate-500">Type:</span> {selectedFacility.type?.replace('_', ' ')}</p>
+                <p><span className="text-slate-500">Status:</span> {selectedFacility.status}</p>
+                <p><span className="text-slate-500">Location:</span> {selectedFacility.location}</p>
+                <p><span className="text-slate-500">Capacity:</span> {selectedFacility.capacity}</p>
+              </div>
+
+              {selectedFacility.description && (
+                <div className="mt-4">
+                  <p className="text-slate-500 mb-1">Description</p>
+                  <p className="text-slate-300">{selectedFacility.description}</p>
+                </div>
+              )}
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

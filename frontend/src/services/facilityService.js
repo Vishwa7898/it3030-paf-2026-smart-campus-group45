@@ -1,6 +1,23 @@
 import axios from 'axios';
 
 const API_URL = 'http://localhost:8080/api/resources';
+const ADMIN_AUTH = `Basic ${btoa('admin:admin123')}`;
+
+const toFormData = (data, file) => {
+  const formData = new FormData();
+  Object.entries(data).forEach(([key, value]) => {
+    if (value === undefined || value === null) return;
+    if (Array.isArray(value)) {
+      value.forEach((item) => formData.append(key, item));
+      return;
+    }
+    formData.append(key, value);
+  });
+  if (file) {
+    formData.append('file', file);
+  }
+  return formData;
+};
 
 export const facilityService = {
   getAll: async (params) => {
@@ -13,23 +30,29 @@ export const facilityService = {
     return response.data;
   },
   
-  create: async (data, role = 'ADMIN') => {
-    const response = await axios.post(API_URL, data, {
-      headers: { 'X-Role': role }
+  create: async (data, file) => {
+    const response = await axios.post(API_URL, toFormData(data, file), {
+      headers: {
+        Authorization: ADMIN_AUTH
+      }
     });
     return response.data;
   },
   
-  update: async (id, data, role = 'ADMIN') => {
-    const response = await axios.put(`${API_URL}/${id}`, data, {
-      headers: { 'X-Role': role }
+  update: async (id, data, file) => {
+    const response = await axios.put(`${API_URL}/${id}`, toFormData(data, file), {
+      headers: {
+        Authorization: ADMIN_AUTH
+      }
     });
     return response.data;
   },
   
-  delete: async (id, role = 'ADMIN') => {
+  delete: async (id) => {
     const response = await axios.delete(`${API_URL}/${id}`, {
-      headers: { 'X-Role': role }
+      headers: {
+        Authorization: ADMIN_AUTH
+      }
     });
     return response.data;
   }

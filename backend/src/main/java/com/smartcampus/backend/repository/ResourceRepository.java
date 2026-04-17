@@ -8,6 +8,7 @@ import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Repository interface for Resource entity with advanced search and filtering.
@@ -33,6 +34,7 @@ public interface ResourceRepository extends MongoRepository<Resource, String> {
     // Name-based search
     @Query("{ 'name': { $regex: ?0, $options: 'i' } }")
     List<Resource> searchByName(String keyword);
+    Optional<Resource> findByNameIgnoreCaseAndLocationIgnoreCase(String name, String location);
 
     // Building and floor search
     List<Resource> findByBuilding(String building);

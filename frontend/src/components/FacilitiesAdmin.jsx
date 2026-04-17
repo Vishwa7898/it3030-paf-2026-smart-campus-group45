@@ -1,36 +1,61 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { facilityService } from '../services/facilityService';
 import AnalyticsDashboard from './AnalyticsDashboard';
 import { 
-  Plus, Edit2, Trash2, Search, X, Check, AlertCircle, 
-  MapPin, Users, Info, Box, ChevronDown, BarChart3
+  Plus, Edit2, Trash2, X, Check, AlertCircle, 
+  MapPin, Box, ChevronDown, BarChart3
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FacilitiesAdmin = () => {
   const [facilities, setFacilities] = useState([]);
+  const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState(null);
   const [activeTab, setActiveTab] = useState('inventory');
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [imagePreview, setImagePreview] = useState(null);
+  const nameInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
-    type: 'ROOM',
+    type: 'LECTURE_HALL',
     location: '',
     capacity: 1,
     status: 'ACTIVE',
     description: '',
-    amenities: [],
-    imageUrl: ''
+    amenities: []
   });
 
-  const resourceTypes = ['ROOM', 'LAB', 'EQUIPMENT', 'LECTURE_HALL', 'SPORTS_ROOM'];
+  const resourceTypes = [
+    'LECTURE_HALL',
+    'LAB',
+    'MEETING_ROOM',
+    'EQUIPMENT',
+    'COMMON_AREA',
+    'SPORTS_FACILITY',
+    'AUDITORIUM',
+    'SEMINAR_ROOM'
+  ];
   const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'INACTIVE'];
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+  const isCapacityRequired = useMemo(
+    () => ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'SEMINAR_ROOM', 'AUDITORIUM', 'SPORTS_FACILITY'].includes(formData.type),
+    [formData.type]
+  );
 
   useEffect(() => {
     fetchFacilities();
   }, []);
+
+  useEffect(() => {
+    if (isModalOpen && nameInputRef.current) {
+      nameInputRef.current.focus();
+    }
+  }, [isModalOpen]);
 
   const fetchFacilities = async () => {
     try {
@@ -51,26 +76,115 @@ const FacilitiesAdmin = () => {
 
   const handleInputChange = (e) => {
     const { name, value, type } = e.target;
+    const parsedValue = type === 'number' ? Number.parseInt(value, 10) || '' : value;
+
     setFormData({
       ...formData,
-      [name]: type === 'number' ? parseInt(value) : value
+      [name]: parsedValue
     });
+
+    if (fieldErrors[name]) {
+      setFieldErrors((prev) => ({ ...prev, [name]: '' }));
+    }
+  };
+
+  const validateForm = () => {
+    const errors = {};
+    const nameRegex = /^[A-Za-z0-9 _.,&-]+$/;
+    const locationRegex = /^[A-Za-z0-9 .,\-/()]+$/;
+
+    const trimmedName = formData.name.trim();
+    const trimmedLocation = formData.location.trim();
+    const trimmedDescription = formData.description.trim();
+
+    if (!trimmedName) {
+      errors.name = 'Resource name is required';
+    } else if (trimmedName.length < 3 || trimmedName.length > 150) {
+      errors.name = 'Resource name must be between 3 and 150 characters';
+    } else if (!nameRegex.test(trimmedName)) {
+      errors.name = 'Invalid characters in resource name';
+    }
+
+    if (!formData.type || !resourceTypes.includes(formData.type)) {
+      errors.type = 'Please select a resource type';
+    }
+
+    if (!trimmedLocation) {
+      errors.location = 'Location is required';
+    } else if (trimmedLocation.length < 5 || trimmedLocation.length > 200) {
+      errors.location = 'Location must be between 5 and 200 characters';
+    } else if (!locationRegex.test(trimmedLocation)) {
+      errors.location = 'Location contains invalid characters';
+    }
+
+    const capacity = Number(formData.capacity);
+    if (isCapacityRequired && !Number.isInteger(capacity)) {
+      errors.capacity = 'Capacity is required';
+    } else if (Number.isInteger(capacity) && (capacity < 1 || capacity > 10000)) {
+      errors.capacity = 'Capacity must be a positive number between 1 and 10,000';
+    }
+
+    if (!formData.status || !resourceStatus.includes(formData.status)) {
+      errors.status = 'Please select a valid status';
+    }
+
+    if (trimmedDescription.length > 1000) {
+      errors.description = 'Description cannot exceed 1000 characters';
+    }
+
+    if (selectedImage) {
+      if (!allowedImageTypes.includes(selectedImage.type)) {
+        errors.image = 'File type not supported. Allowed: JPG, PNG, WEBP, GIF';
+      } else if (selectedImage.size > 5 * 1024 * 1024) {
+        errors.image = 'File size exceeds 5 MB limit';
+      }
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0] || null;
+    setSelectedImage(file);
+    setFieldErrors((prev) => ({ ...prev, image: '' }));
+
+    if (!file) {
+      setImagePreview(null);
+      return;
+    }
+    const objectUrl = URL.createObjectURL(file);
+    setImagePreview(objectUrl);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!validateForm()) {
+      return;
+    }
+
+    setIsSubmitting(true);
     try {
+      const payload = {
+        ...formData,
+        name: formData.name.trim(),
+        location: formData.location.trim(),
+        description: formData.description.trim()
+      };
+
       if (editingFacility) {
-        await facilityService.update(editingFacility.id, formData);
+        await facilityService.update(editingFacility.id, payload, selectedImage);
       } else {
-        await facilityService.create(formData);
+        await facilityService.create(payload, selectedImage);
       }
       setIsModalOpen(false);
       setEditingFacility(null);
       resetForm();
       fetchFacilities();
     } catch (err) {
-      setError('Failed to save facility');
+      setError(err?.response?.data?.error || 'Failed to save facility');
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -83,9 +197,11 @@ const FacilitiesAdmin = () => {
       capacity: facility.capacity,
       status: facility.status || 'ACTIVE',
       description: facility.description || '',
-      amenities: facility.amenities || [],
-      imageUrl: facility.imageUrl || ''
+      amenities: facility.amenities || []
     });
+    setSelectedImage(null);
+    setImagePreview(facility.imageUrl ? `http://localhost:8080${facility.imageUrl}` : null);
+    setFieldErrors({});
     setIsModalOpen(true);
   };
 
@@ -103,21 +219,22 @@ const FacilitiesAdmin = () => {
   const resetForm = () => {
     setFormData({
       name: '',
-      type: 'ROOM',
+      type: 'LECTURE_HALL',
       location: '',
       capacity: 1,
       status: 'ACTIVE',
       description: '',
-      amenities: [],
-      imageUrl: ''
+      amenities: []
     });
+    setSelectedImage(null);
+    setImagePreview(null);
+    setFieldErrors({});
   };
 
   // Quick Stats Calculation
   const stats = {
     total: facilities.length,
-    active: facilities.filter(f => f.status === 'ACTIVE').length,
-    totalCapacity: facilities.reduce((acc, f) => acc + (f.capacity || 0), 0)
+    active: facilities.filter(f => f.status === 'ACTIVE').length
   };
 
   return (
@@ -194,11 +311,10 @@ const FacilitiesAdmin = () => {
         {activeTab === 'inventory' ? (
           <>
             {/* Quick Stats Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               {[
                 { label: 'Total Resources', value: stats.total, icon: <Box className="text-blue-400" />, color: 'from-blue-500/10 to-transparent' },
-                { label: 'Active Resources', value: stats.active, icon: <Check className="text-emerald-400" />, color: 'from-emerald-500/10 to-transparent' },
-                { label: 'Total Capacity', value: stats.totalCapacity, icon: <Users className="text-purple-400" />, color: 'from-purple-500/10 to-transparent' }
+                { label: 'Active Resources', value: stats.active, icon: <Check className="text-emerald-400" />, color: 'from-emerald-500/10 to-transparent' }
               ].map((stat, i) => (
                 <motion.div
                   key={i}
@@ -425,16 +541,14 @@ const FacilitiesAdmin = () => {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Image URL</label>
+                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Image</label>
                   <input
-                    type="url"
-                    name="imageUrl"
-                    value={formData.imageUrl}
-                    onChange={handleInputChange}
-                    className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white placeholder:text-slate-600"
-                    placeholder="https://images.unsplash.com/..."
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.webp"
+                    onChange={(e) => setSelectedImage(e.target.files?.[0] || null)}
+                    className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-600 file:text-white file:font-semibold hover:file:bg-indigo-500"
                   />
-                  <p className="text-slate-500 text-xs mt-2 italic">Paste a direct link to a high-quality facility image.</p>
+                  <p className="text-slate-500 text-xs mt-2 italic">Select an image file from your PC (jpg, jpeg, png, webp).</p>
                 </div>
 
                 <button
