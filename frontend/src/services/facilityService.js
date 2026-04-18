@@ -68,15 +68,13 @@ export const facilityService = {
   },
 
   update: async (id, data, file) => {
-    const response = await axios.put(
-      `${API_URL}/${encodeURIComponent(id)}`,
-      toFormData(data, file),
-      {
-        headers: {
-          Authorization: ADMIN_AUTH
-        }
+    const url = `${API_URL}/${encodeURIComponent(id)}`;
+    const payload = file ? toFormData(data, file) : data;
+    const response = await axios.put(url, payload, {
+      headers: {
+        Authorization: ADMIN_AUTH
       }
-    );
+    });
     return response.data;
   },
 

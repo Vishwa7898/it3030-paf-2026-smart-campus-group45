@@ -208,7 +208,12 @@ const FacilitiesAdmin = () => {
       resetForm();
       fetchFacilities();
     } catch (err) {
-      setError(err?.response?.data?.error || 'Failed to save facility');
+      const apiError = err?.response?.data;
+      const firstValidationError =
+        apiError && typeof apiError === 'object'
+          ? Object.values(apiError).find((value) => typeof value === 'string')
+          : null;
+      setError(apiError?.error || firstValidationError || 'Failed to save facility');
     } finally {
       setIsSubmitting(false);
     }
