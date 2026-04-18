@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { facilityService } from '../services/facilityService';
 import { 
   Plus, Edit2, Trash2, X, Check, AlertCircle, 
-  MapPin, Box, ChevronDown, FileText, Download, Printer
+  MapPin, Box, ChevronDown, FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -17,6 +17,8 @@ const FacilitiesAdmin = () => {
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
+  const [reportGeneratedAt, setReportGeneratedAt] = useState(() => new Date());
+  const [reportVisible, setReportVisible] = useState(false);
   const nameInputRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
@@ -49,6 +51,12 @@ const FacilitiesAdmin = () => {
   useEffect(() => {
     fetchFacilities();
   }, []);
+
+  useEffect(() => {
+    if (activeTab !== 'reports') {
+      setReportVisible(false);
+    }
+  }, [activeTab]);
 
   useEffect(() => {
     if (isModalOpen && nameInputRef.current) {
@@ -236,94 +244,6 @@ const FacilitiesAdmin = () => {
     active: facilities.filter(f => f.status === 'ACTIVE').length
   };
 
-  const reportSummary = useMemo(() => {
-    const byType = facilities.reduce((acc, item) => {
-      acc[item.type] = (acc[item.type] || 0) + 1;
-      return acc;
-    }, {});
-    const byStatus = facilities.reduce((acc, item) => {
-      acc[item.status] = (acc[item.status] || 0) + 1;
-      return acc;
-    }, {});
-    return { byType, byStatus };
-  }, [facilities]);
-
-  const downloadFile = (fileName, content, contentType) => {
-    const blob = new Blob([content], { type: contentType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = fileName;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
-
-  const exportCsvReport = () => {
-    const header = ['ID', 'Name', 'Type', 'Location', 'Capacity', 'Status', 'Description'];
-    const rows = facilities.map((r) => [
-      r.id || '',
-      r.name || '',
-      r.type || '',
-      r.location || '',
-      r.capacity ?? '',
-      r.status || '',
-      (r.description || '').replace(/\r?\n/g, ' ')
-    ]);
-    const csv = [header, ...rows]
-      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    downloadFile(`resource-report-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv;charset=utf-8;');
-  };
-
-  const exportJsonReport = () => {
-    const payload = {
-      generatedAt: new Date().toISOString(),
-      totalResources: facilities.length,
-      summary: reportSummary,
-      resources: facilities
-    };
-    downloadFile(
-      `resource-report-${new Date().toISOString().slice(0, 10)}.json`,
-      JSON.stringify(payload, null, 2),
-      'application/json;charset=utf-8;'
-    );
-  };
-
-  const printReport = () => {
-    const printWindow = window.open('', '_blank', 'width=900,height=700');
-    if (!printWindow) return;
-    const rows = facilities
-      .map(
-        (r) => `<tr>
-          <td>${r.name || ''}</td>
-          <td>${r.type || ''}</td>
-          <td>${r.location || ''}</td>
-          <td>${r.capacity ?? ''}</td>
-          <td>${r.status || ''}</td>
-        </tr>`
-      )
-      .join('');
-    printWindow.document.write(`
-      <html>
-      <head><title>Facilities Report</title></head>
-      <body style="font-family: Arial, sans-serif; padding: 24px;">
-        <h2>Facilities & Assets Report</h2>
-        <p>Generated: ${new Date().toLocaleString()}</p>
-        <p>Total Resources: ${facilities.length}</p>
-        <table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
-          <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Capacity</th><th>Status</th></tr></thead>
-          <tbody>${rows}</tbody>
-        </table>
-      </body>
-      </html>
-    `);
-    printWindow.document.close();
-    printWindow.focus();
-    printWindow.print();
-  };
-
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -505,63 +425,76 @@ const FacilitiesAdmin = () => {
             </div>
           </>
         ) : (
-          <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8">
-            <div className="flex items-start justify-between gap-4 flex-col md:flex-row mb-8">
-              <div>
-                <h2 className="text-2xl font-black text-white">Report Generation</h2>
-                <p className="text-slate-400 mt-2">Generate exportable facilities reports for assignment submission.</p>
+          <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-6 md:p-8">
+            {!reportVisible ? (
+              <div className="flex flex-col items-center justify-center text-center py-12 md:py-16 px-4">
+                <h2 className="text-2xl font-black text-white mb-3">Facilities &amp; Assets Report</h2>
+                <p className="text-slate-400 max-w-md mb-8">
+                  Generate the report to view resource details in a summary table.
+                </p>
+                <motion.button
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setReportGeneratedAt(new Date());
+                    setReportVisible(true);
+                  }}
+                  className="flex items-center gap-2 px-8 py-4 rounded-2xl bg-indigo-600 hover:bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/25 border border-indigo-400/20"
+                >
+                  <FileText size={20} />
+                  View report
+                </motion.button>
               </div>
-              <div className="flex gap-3">
-                <button
-                  onClick={exportCsvReport}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition-all font-bold"
-                >
-                  <Download size={16} />
-                  Export CSV
-                </button>
-                <button
-                  onClick={exportJsonReport}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition-all font-bold"
-                >
-                  <Download size={16} />
-                  Export JSON
-                </button>
-                <button
-                  onClick={printReport}
-                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 transition-all font-bold"
-                >
-                  <Printer size={16} />
-                  Print
-                </button>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
-                <h3 className="text-lg font-bold text-white mb-4">Resource Count by Type</h3>
-                <div className="space-y-2 text-slate-300">
-                  {Object.entries(reportSummary.byType).length === 0 ? (
-                    <p>No data available.</p>
-                  ) : (
-                    Object.entries(reportSummary.byType).map(([type, count]) => (
-                      <p key={type}>{type.replace('_', ' ')}: <span className="font-bold">{count}</span></p>
-                    ))
-                  )}
+            ) : (
+              <div className="rounded-2xl bg-white text-slate-900 shadow-xl border border-slate-200/80 p-8 md:p-10 font-sans">
+                <h2 className="text-2xl md:text-[1.75rem] font-bold tracking-tight text-black mb-6">
+                  Facilities &amp; Assets Report
+                </h2>
+                <div className="text-sm text-slate-800 space-y-1 mb-10 leading-relaxed">
+                  <p>Generated: {reportGeneratedAt.toLocaleString()}</p>
+                  <p>Total Resources: {facilities.length}</p>
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full border-collapse text-sm">
+                    <thead>
+                      <tr className="bg-neutral-50">
+                        <th className="border border-neutral-300 px-3 py-2.5 font-bold text-center text-black">Name</th>
+                        <th className="border border-neutral-300 px-3 py-2.5 font-bold text-center text-black">Type</th>
+                        <th className="border border-neutral-300 px-3 py-2.5 font-bold text-center text-black">Location</th>
+                        <th className="border border-neutral-300 px-3 py-2.5 font-bold text-center text-black">Capacity</th>
+                        <th className="border border-neutral-300 px-3 py-2.5 font-bold text-center text-black">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={5} className="border border-neutral-300 px-3 py-8 text-center text-slate-500">
+                            Loading…
+                          </td>
+                        </tr>
+                      ) : facilities.length > 0 ? (
+                        facilities.map((r) => (
+                          <tr key={r.id}>
+                            <td className="border border-neutral-300 px-3 py-2.5 text-left align-top">{r.name}</td>
+                            <td className="border border-neutral-300 px-3 py-2.5 text-left align-top">{r.type}</td>
+                            <td className="border border-neutral-300 px-3 py-2.5 text-left align-top">{r.location}</td>
+                            <td className="border border-neutral-300 px-3 py-2.5 text-left align-top">{r.capacity ?? ''}</td>
+                            <td className="border border-neutral-300 px-3 py-2.5 text-left align-top">{r.status}</td>
+                          </tr>
+                        ))
+                      ) : (
+                        <tr>
+                          <td colSpan={5} className="border border-neutral-300 px-3 py-8 text-center text-slate-500">
+                            No resources to show.
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               </div>
-              <div className="p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
-                <h3 className="text-lg font-bold text-white mb-4">Resource Count by Status</h3>
-                <div className="space-y-2 text-slate-300">
-                  {Object.entries(reportSummary.byStatus).length === 0 ? (
-                    <p>No data available.</p>
-                  ) : (
-                    Object.entries(reportSummary.byStatus).map(([status, count]) => (
-                      <p key={status}>{status}: <span className="font-bold">{count}</span></p>
-                    ))
-                  )}
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         )}
       </div>
