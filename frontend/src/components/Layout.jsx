@@ -1,10 +1,12 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { useNotifications } from '../context/NotificationContext';
 import { Bell, User, LogOut, Home, Settings, Menu, Shield } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout() {
   const { user, logout } = useAuth();
+  const { unreadCount } = useNotifications();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -32,8 +34,12 @@ export default function Layout() {
 
           {user && (
             <>
-              <Link to="/notifications" className={`nav-link ${isActive('/notifications') ? 'active' : ''}`}>
-                <Bell size={18} /> Notifications
+              <Link to="/notifications" className={`nav-link ${isActive('/notifications') ? 'active' : ''}`} style={{ position: 'relative' }}>
+                <Bell size={18} className={unreadCount > 0 ? 'bell-ring' : ''} />
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="notification-badge">{unreadCount}</span>
+                )}
               </Link>
               {user.roles.includes('ADMIN') && (
                 <Link to="/admin" className={`nav-link ${isActive('/admin') ? 'active' : ''}`}>

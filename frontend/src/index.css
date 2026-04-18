@@ -449,6 +449,92 @@ p:last-child { margin-bottom: 0; }
   align-items: center;
 }
 
+/* UI/UX Enhancements for Notifications */
+.bell-ring {
+  animation: ring 2s ease-in-out infinite;
+  transform-origin: top center;
+}
+
+@keyframes ring {
+  0% { transform: rotate(0); }
+  10% { transform: rotate(15deg); }
+  20% { transform: rotate(-10deg); }
+  30% { transform: rotate(5deg); }
+  40% { transform: rotate(-5deg); }
+  50% { transform: rotate(0); }
+  100% { transform: rotate(0); }
+}
+
+.notification-badge {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: var(--danger);
+  color: white;
+  border-radius: var(--radius-full);
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.1rem 0.4rem;
+  min-width: 1.2rem;
+  text-align: center;
+  border: 2px solid var(--surface);
+  animation: pop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes pop {
+  0% { transform: scale(0); }
+  100% { transform: scale(1); }
+}
+
+.notification-item.unread:hover {
+  background: var(--surface);
+  transform: translateX(4px);
+  box-shadow: var(--shadow-sm);
+}
+
+.notification-item:hover .mark-read-btn {
+  opacity: 1;
+  transform: scale(1.1);
+}
+
+.mark-read-btn {
+  transition: all 0.2s;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: var(--radius-full);
+}
+
+.mark-read-btn:hover {
+  background: var(--primary-light);
+}
+
+/* Category Badges */
+.badge-system {
+  background: #ffebee;
+  color: #c62828;
+  border: 1px solid #ffcdd2;
+}
+
+.badge-booking {
+  background: #e8f5e9;
+  color: #2e7d32;
+  border: 1px solid #c8e6c9;
+}
+
+.badge-ticket {
+  background: #fff3e0;
+  color: #ef6c00;
+  border: 1px solid #ffe0b2;
+}
+
+.badge-comment {
+  background: #e3f2fd;
+  color: #1565c0;
+  border: 1px solid #bbdefb;
+}
+
 .badge {
   padding: 0.25rem 0.75rem;
   border-radius: var(--radius-full);
