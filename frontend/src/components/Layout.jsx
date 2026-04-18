@@ -5,7 +5,7 @@ import { useAuth } from '../auth/AuthContext';
 const Layout = ({ children }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, logout, isStudent } = useAuth();
 
   const handleLogout = () => {
     logout();
@@ -45,6 +45,7 @@ const Layout = ({ children }) => {
                   >
                     Tickets
                   </Link>
+                {isStudent && (
                   <Link
                     to="/tickets/new"
                     className={`px-3.5 py-1.5 rounded-xl text-sm font-semibold transition-colors ${
@@ -55,6 +56,7 @@ const Layout = ({ children }) => {
                   >
                     Report Issue
                   </Link>
+                )}
                 </div>
               </div>
               <div className="flex items-center flex-wrap gap-2 sm:gap-3">
@@ -66,13 +68,15 @@ const Layout = ({ children }) => {
                   <Bell className="w-6 h-6" />
                   <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-rose-400 ring-2 ring-violet-700" />
                 </button>
-                <Link
-                  to="/tickets/new"
-                  className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base font-bold text-slate-900 bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-200 hover:to-yellow-200 shadow-md shadow-amber-300/40 transition-all"
-                >
-                  <Ticket className="w-5 h-5" />
-                  New ticket
-                </Link>
+                {isStudent && (
+                  <Link
+                    to="/tickets/new"
+                    className="inline-flex items-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 rounded-2xl text-sm sm:text-base font-bold text-slate-900 bg-gradient-to-r from-amber-300 to-yellow-300 hover:from-amber-200 hover:to-yellow-200 shadow-md shadow-amber-300/40 transition-all"
+                  >
+                    <Ticket className="w-5 h-5" />
+                    New ticket
+                  </Link>
+                )}
                 <div className="flex items-center gap-2 text-sm text-white bg-white/15 rounded-2xl px-3 py-2.5 border border-white/20">
                   <span className="font-semibold truncate max-w-32">{user?.displayName ?? user?.id}</span>
                   <span className="text-indigo-200">|</span>
