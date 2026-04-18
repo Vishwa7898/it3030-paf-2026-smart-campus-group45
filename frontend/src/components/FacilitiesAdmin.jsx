@@ -1,9 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { facilityService } from '../services/facilityService';
-import AnalyticsDashboard from './AnalyticsDashboard';
 import { 
   Plus, Edit2, Trash2, X, Check, AlertCircle, 
-  MapPin, Box, ChevronDown, BarChart3
+  MapPin, Box, ChevronDown, FileText, Download, Printer
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -237,6 +236,94 @@ const FacilitiesAdmin = () => {
     active: facilities.filter(f => f.status === 'ACTIVE').length
   };
 
+  const reportSummary = useMemo(() => {
+    const byType = facilities.reduce((acc, item) => {
+      acc[item.type] = (acc[item.type] || 0) + 1;
+      return acc;
+    }, {});
+    const byStatus = facilities.reduce((acc, item) => {
+      acc[item.status] = (acc[item.status] || 0) + 1;
+      return acc;
+    }, {});
+    return { byType, byStatus };
+  }, [facilities]);
+
+  const downloadFile = (fileName, content, contentType) => {
+    const blob = new Blob([content], { type: contentType });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const exportCsvReport = () => {
+    const header = ['ID', 'Name', 'Type', 'Location', 'Capacity', 'Status', 'Description'];
+    const rows = facilities.map((r) => [
+      r.id || '',
+      r.name || '',
+      r.type || '',
+      r.location || '',
+      r.capacity ?? '',
+      r.status || '',
+      (r.description || '').replace(/\r?\n/g, ' ')
+    ]);
+    const csv = [header, ...rows]
+      .map((row) => row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    downloadFile(`resource-report-${new Date().toISOString().slice(0, 10)}.csv`, csv, 'text/csv;charset=utf-8;');
+  };
+
+  const exportJsonReport = () => {
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      totalResources: facilities.length,
+      summary: reportSummary,
+      resources: facilities
+    };
+    downloadFile(
+      `resource-report-${new Date().toISOString().slice(0, 10)}.json`,
+      JSON.stringify(payload, null, 2),
+      'application/json;charset=utf-8;'
+    );
+  };
+
+  const printReport = () => {
+    const printWindow = window.open('', '_blank', 'width=900,height=700');
+    if (!printWindow) return;
+    const rows = facilities
+      .map(
+        (r) => `<tr>
+          <td>${r.name || ''}</td>
+          <td>${r.type || ''}</td>
+          <td>${r.location || ''}</td>
+          <td>${r.capacity ?? ''}</td>
+          <td>${r.status || ''}</td>
+        </tr>`
+      )
+      .join('');
+    printWindow.document.write(`
+      <html>
+      <head><title>Facilities Report</title></head>
+      <body style="font-family: Arial, sans-serif; padding: 24px;">
+        <h2>Facilities & Assets Report</h2>
+        <p>Generated: ${new Date().toLocaleString()}</p>
+        <p>Total Resources: ${facilities.length}</p>
+        <table border="1" cellspacing="0" cellpadding="8" style="border-collapse: collapse; width: 100%;">
+          <thead><tr><th>Name</th><th>Type</th><th>Location</th><th>Capacity</th><th>Status</th></tr></thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    printWindow.print();
+  };
+
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -285,14 +372,14 @@ const FacilitiesAdmin = () => {
             </div>
           </button>
           <button
-            onClick={() => setActiveTab('analytics')}
-            className={`px-6 py-4 font-bold transition-all ${activeTab === 'analytics' 
+            onClick={() => setActiveTab('reports')}
+            className={`px-6 py-4 font-bold transition-all ${activeTab === 'reports' 
               ? 'text-indigo-400 border-b-2 border-indigo-500' 
               : 'text-slate-400 hover:text-slate-300'}`}
           >
             <div className="flex items-center gap-2">
-              <BarChart3 size={20} />
-              Analytics & Reports
+              <FileText size={20} />
+              Reports
             </div>
           </button>
         </div>
@@ -418,8 +505,64 @@ const FacilitiesAdmin = () => {
             </div>
           </>
         ) : (
-          // Analytics Tab
-          <AnalyticsDashboard />
+          <div className="bg-slate-800/40 backdrop-blur-xl border border-slate-700/50 rounded-3xl p-8">
+            <div className="flex items-start justify-between gap-4 flex-col md:flex-row mb-8">
+              <div>
+                <h2 className="text-2xl font-black text-white">Report Generation</h2>
+                <p className="text-slate-400 mt-2">Generate exportable facilities reports for assignment submission.</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={exportCsvReport}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 transition-all font-bold"
+                >
+                  <Download size={16} />
+                  Export CSV
+                </button>
+                <button
+                  onClick={exportJsonReport}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-slate-700 hover:bg-slate-600 transition-all font-bold"
+                >
+                  <Download size={16} />
+                  Export JSON
+                </button>
+                <button
+                  onClick={printReport}
+                  className="flex items-center gap-2 px-4 py-3 rounded-xl bg-emerald-700 hover:bg-emerald-600 transition-all font-bold"
+                >
+                  <Printer size={16} />
+                  Print
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
+                <h3 className="text-lg font-bold text-white mb-4">Resource Count by Type</h3>
+                <div className="space-y-2 text-slate-300">
+                  {Object.entries(reportSummary.byType).length === 0 ? (
+                    <p>No data available.</p>
+                  ) : (
+                    Object.entries(reportSummary.byType).map(([type, count]) => (
+                      <p key={type}>{type.replace('_', ' ')}: <span className="font-bold">{count}</span></p>
+                    ))
+                  )}
+                </div>
+              </div>
+              <div className="p-6 rounded-2xl border border-slate-700/50 bg-slate-900/40">
+                <h3 className="text-lg font-bold text-white mb-4">Resource Count by Status</h3>
+                <div className="space-y-2 text-slate-300">
+                  {Object.entries(reportSummary.byStatus).length === 0 ? (
+                    <p>No data available.</p>
+                  ) : (
+                    Object.entries(reportSummary.byStatus).map(([status, count]) => (
+                      <p key={status}>{status}: <span className="font-bold">{count}</span></p>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
 
