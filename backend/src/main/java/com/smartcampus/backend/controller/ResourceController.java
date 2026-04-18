@@ -25,6 +25,7 @@ import java.util.List;
  * - GET    /api/resources                    List all resources (with filters)
  * - GET    /api/resources/search             Search resources by keyword
  * - GET    /api/resources/location/{location} Filter by location
+ * - GET    /api/resources/status/active     List ACTIVE resources (literal path; registered before /status/{status})
  * - GET    /api/resources/status/{status}   Filter by status
  * - GET    /api/resources/{id}               Get single resource
  * - PUT    /api/resources/{id}               Update entire resource
@@ -106,6 +107,15 @@ public class ResourceController {
     @GetMapping("/location/{location}")
     public ResponseEntity<List<Resource>> getResourcesByLocation(@PathVariable String location) {
         return ResponseEntity.ok(resourceService.filterByLocation(location));
+    }
+
+    /**
+     * Active resources shortcut (literal path must be registered before {@code /status/{status}}
+     * so {@code /status/active} is not misread as an enum value).
+     */
+    @GetMapping("/status/active")
+    public ResponseEntity<List<Resource>> getActiveResources() {
+        return ResponseEntity.ok(resourceService.getActiveResources());
     }
 
     /**
@@ -201,16 +211,5 @@ public class ResourceController {
     public ResponseEntity<Void> deleteResource(@PathVariable String id) {
         resourceService.deleteResource(id);
         return ResponseEntity.noContent().build();
-    }
-
-    /**
-* GET ACTIVE RESOURCES: GET /api/resources/active
-     * Retrieve all active (available) resources.
-     *
-     * @return List of active resources
-     */
-    @GetMapping("/status/active")
-    public ResponseEntity<List<Resource>> getActiveResources() {
-        return ResponseEntity.ok(resourceService.getActiveResources());
     }
 }

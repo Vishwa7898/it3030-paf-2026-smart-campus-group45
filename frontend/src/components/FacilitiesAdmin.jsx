@@ -1,19 +1,30 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { facilityService } from '../services/facilityService';
+import { Link, useSearchParams } from 'react-router-dom';
+import { facilityService, API_BASE_URL } from '../services/facilityService';
 import { 
   Plus, Edit2, Trash2, X, Check, AlertCircle, 
-  MapPin, Box, ChevronDown, FileText
+  MapPin, Box, ChevronDown, FileText, ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const FacilitiesAdmin = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const activeTab = searchParams.get('tab') === 'reports' ? 'reports' : 'inventory';
+
+  const goToTab = (tab) => {
+    if (tab === 'reports') {
+      setSearchParams({ tab: 'reports' });
+    } else {
+      setSearchParams({});
+    }
+  };
+
   const [facilities, setFacilities] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingFacility, setEditingFacility] = useState(null);
-  const [activeTab, setActiveTab] = useState('inventory');
   const [fieldErrors, setFieldErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
@@ -207,7 +218,7 @@ const FacilitiesAdmin = () => {
       amenities: facility.amenities || []
     });
     setSelectedImage(null);
-    setImagePreview(facility.imageUrl ? `http://localhost:8080${facility.imageUrl}` : null);
+    setImagePreview(facility.imageUrl ? `${API_BASE_URL}${facility.imageUrl}` : null);
     setFieldErrors({});
     setIsModalOpen(true);
   };
@@ -247,6 +258,15 @@ const FacilitiesAdmin = () => {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-100 p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
+        <div className="mb-6">
+          <Link
+            to="/facilities"
+            className="inline-flex items-center gap-2 text-sm font-bold text-slate-400 hover:text-indigo-400 transition-colors"
+          >
+            <ChevronLeft size={18} aria-hidden />
+            Back to facilities catalogue
+          </Link>
+        </div>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -281,7 +301,8 @@ const FacilitiesAdmin = () => {
         {/* Tabs */}
         <div className="flex gap-4 mb-8 border-b border-slate-700/50">
           <button
-            onClick={() => setActiveTab('inventory')}
+            type="button"
+            onClick={() => goToTab('inventory')}
             className={`px-6 py-4 font-bold transition-all ${activeTab === 'inventory' 
               ? 'text-indigo-400 border-b-2 border-indigo-500' 
               : 'text-slate-400 hover:text-slate-300'}`}
@@ -292,7 +313,8 @@ const FacilitiesAdmin = () => {
             </div>
           </button>
           <button
-            onClick={() => setActiveTab('reports')}
+            type="button"
+            onClick={() => goToTab('reports')}
             className={`px-6 py-4 font-bold transition-all ${activeTab === 'reports' 
               ? 'text-indigo-400 border-b-2 border-indigo-500' 
               : 'text-slate-400 hover:text-slate-300'}`}

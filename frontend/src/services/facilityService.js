@@ -1,6 +1,11 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/resources';
+/** Base URL for API and uploaded media (override with VITE_API_BASE_URL in .env). */
+export const API_BASE_URL =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
+  'http://localhost:8080';
+
+const API_URL = `${API_BASE_URL}/api/resources`;
 const ADMIN_AUTH = `Basic ${btoa('admin:admin123')}`;
 
 const toFormData = (data, file) => {
@@ -24,12 +29,35 @@ export const facilityService = {
     const response = await axios.get(API_URL, { params });
     return response.data;
   },
-  
-  getById: async (id) => {
-    const response = await axios.get(`${API_URL}/${id}`);
+
+  search: async (keyword) => {
+    const response = await axios.get(`${API_URL}/search`, {
+      params: keyword ? { keyword } : {}
+    });
     return response.data;
   },
-  
+
+  getByLocation: async (location) => {
+    const encoded = encodeURIComponent(location);
+    const response = await axios.get(`${API_URL}/location/${encoded}`);
+    return response.data;
+  },
+
+  getByStatus: async (status) => {
+    const response = await axios.get(`${API_URL}/status/${status}`);
+    return response.data;
+  },
+
+  getActive: async () => {
+    const response = await axios.get(`${API_URL}/status/active`);
+    return response.data;
+  },
+
+  getById: async (id) => {
+    const response = await axios.get(`${API_URL}/${encodeURIComponent(id)}`);
+    return response.data;
+  },
+
   create: async (data, file) => {
     const response = await axios.post(API_URL, toFormData(data, file), {
       headers: {
@@ -38,18 +66,22 @@ export const facilityService = {
     });
     return response.data;
   },
-  
+
   update: async (id, data, file) => {
-    const response = await axios.put(`${API_URL}/${id}`, toFormData(data, file), {
-      headers: {
-        Authorization: ADMIN_AUTH
+    const response = await axios.put(
+      `${API_URL}/${encodeURIComponent(id)}`,
+      toFormData(data, file),
+      {
+        headers: {
+          Authorization: ADMIN_AUTH
+        }
       }
-    });
+    );
     return response.data;
   },
-  
+
   delete: async (id) => {
-    const response = await axios.delete(`${API_URL}/${id}`, {
+    const response = await axios.delete(`${API_URL}/${encodeURIComponent(id)}`, {
       headers: {
         Authorization: ADMIN_AUTH
       }
