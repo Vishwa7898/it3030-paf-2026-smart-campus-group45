@@ -150,7 +150,11 @@ const FacilitiesAdmin = () => {
       errors.description = 'Description cannot exceed 1000 characters';
     }
 
-    if (selectedImage) {
+    const hasStoredImage =
+      Boolean(editingFacility?.imageUrl) && String(editingFacility.imageUrl).trim().length > 0;
+    if (!selectedImage && !hasStoredImage) {
+      errors.image = 'Resource image is required';
+    } else if (selectedImage) {
       if (!allowedImageTypes.includes(selectedImage.type)) {
         errors.image = 'File type not supported. Allowed: JPG, PNG, WEBP, GIF';
       } else if (selectedImage.size > 5 * 1024 * 1024) {
@@ -168,7 +172,11 @@ const FacilitiesAdmin = () => {
     setFieldErrors((prev) => ({ ...prev, image: '' }));
 
     if (!file) {
-      setImagePreview(null);
+      if (editingFacility?.imageUrl) {
+        setImagePreview(`${API_BASE_URL}${editingFacility.imageUrl}`);
+      } else {
+        setImagePreview(null);
+      }
       return;
     }
     const objectUrl = URL.createObjectURL(file);
@@ -657,14 +665,21 @@ const FacilitiesAdmin = () => {
                 </div>
 
                 <div>
-                    <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">Resource Image</label>
+                  <label className="block text-sm font-bold text-slate-400 mb-2 uppercase tracking-wide">
+                    Resource image *
+                  </label>
                   <input
                     type="file"
                     accept=".jpg,.jpeg,.png,.webp,.gif"
                     onChange={handleImageChange}
                     className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-600 file:text-white file:font-semibold hover:file:bg-indigo-500"
                   />
-                  <p className="text-slate-500 text-xs mt-2 italic">Select an image file from your PC (JPG, PNG, WEBP, GIF), max 5MB.</p>
+                  <p className="text-slate-500 text-xs mt-2 italic">
+                    Required: JPG, PNG, WEBP, or GIF from your device, max 5MB.
+                    {editingFacility?.imageUrl
+                      ? ' When editing, you may keep the current image or choose a new file.'
+                      : ''}
+                  </p>
                   {fieldErrors.image && <p className="text-red-400 text-xs mt-2">{fieldErrors.image}</p>}
                   {imagePreview && (
                     <img

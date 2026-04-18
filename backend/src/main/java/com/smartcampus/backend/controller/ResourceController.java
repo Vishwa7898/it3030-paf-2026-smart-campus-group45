@@ -51,10 +51,11 @@ public class ResourceController {
     public ResponseEntity<Resource> createResource(
             @Valid @ModelAttribute Resource resource,
             @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
-        if (file != null && !file.isEmpty()) {
-            String imagePath = fileStorageService.storeFile(file);
-            resource.setImageUrl(imagePath);
+        if (file == null || file.isEmpty()) {
+            throw new IllegalArgumentException("Image file is required when creating a resource");
         }
+        String imagePath = fileStorageService.storeFile(file);
+        resource.setImageUrl(imagePath);
 
         return new ResponseEntity<>(resourceService.createResource(resource), HttpStatus.CREATED);
     }
