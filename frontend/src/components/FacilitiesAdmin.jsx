@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { facilityService, API_BASE_URL } from '../services/facilityService';
 import { 
   Plus, Edit2, Trash2, X, Check, AlertCircle, 
-  MapPin, Box, ChevronDown, FileText, ChevronLeft
+  MapPin, Box, ChevronDown, FileText, ChevronLeft, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -52,7 +52,7 @@ const FacilitiesAdmin = () => {
     'SEMINAR_ROOM'
   ];
   const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'UNDER_REPAIR', 'DECOMMISSIONED', 'RESERVED', 'INACTIVE'];
-  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+  const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
   const isCapacityRequired = useMemo(
     () => ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'SEMINAR_ROOM', 'AUDITORIUM', 'SPORTS_FACILITY'].includes(formData.type),
@@ -156,9 +156,7 @@ const FacilitiesAdmin = () => {
       errors.image = 'Resource image is required';
     } else if (selectedImage) {
       if (!allowedImageTypes.includes(selectedImage.type)) {
-        errors.image = 'File type not supported. Allowed: JPG, PNG, WEBP, GIF';
-      } else if (selectedImage.size > 5 * 1024 * 1024) {
-        errors.image = 'File size exceeds 5 MB limit';
+        errors.image = 'File type not supported. Allowed: JPG, PNG, WEBP';
       }
     }
 
@@ -260,6 +258,57 @@ const FacilitiesAdmin = () => {
     setSelectedImage(null);
     setImagePreview(null);
     setFieldErrors({});
+  };
+
+  const downloadReport = () => {
+    const rows = facilities
+      .map(
+        (r) => `
+          <tr>
+            <td>${r.name ?? ''}</td>
+            <td>${r.type ?? ''}</td>
+            <td>${r.location ?? ''}</td>
+            <td>${r.capacity ?? ''}</td>
+            <td>${r.status ?? ''}</td>
+          </tr>
+        `
+      )
+      .join('');
+    const reportHtml = `<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Facilities and Assets Report</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 24px; color: #111; }
+    h1 { margin-bottom: 12px; }
+    p { margin: 4px 0; }
+    table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #f7f7f7; }
+  </style>
+</head>
+<body>
+  <h1>Facilities & Assets Report</h1>
+  <p>Generated: ${reportGeneratedAt.toLocaleString()}</p>
+  <p>Total Resources: ${facilities.length}</p>
+  <table>
+    <thead>
+      <tr><th>Name</th><th>Type</th><th>Location</th><th>Capacity</th><th>Status</th></tr>
+    </thead>
+    <tbody>${rows}</tbody>
+  </table>
+</body>
+</html>`;
+    const blob = new Blob([reportHtml], { type: 'text/html;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `facilities-assets-report-${new Date().toISOString().slice(0, 10)}.html`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // Quick Stats Calculation
@@ -480,12 +529,30 @@ const FacilitiesAdmin = () => {
                   <FileText size={20} />
                   View report
                 </motion.button>
+                <button
+                  type="button"
+                  onClick={downloadReport}
+                  className="mt-3 flex items-center gap-2 px-8 py-3 rounded-2xl bg-slate-700 hover:bg-slate-600 text-white font-bold transition-all"
+                >
+                  <Download size={18} />
+                  Download report
+                </button>
               </div>
             ) : (
               <div className="rounded-2xl bg-white text-slate-900 shadow-xl border border-slate-200/80 p-8 md:p-10 font-sans">
-                <h2 className="text-2xl md:text-[1.75rem] font-bold tracking-tight text-black mb-6">
-                  Facilities &amp; Assets Report
-                </h2>
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                  <h2 className="text-2xl md:text-[1.75rem] font-bold tracking-tight text-black">
+                    Facilities &amp; Assets Report
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={downloadReport}
+                    className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-800 text-white text-sm font-semibold hover:bg-slate-700"
+                  >
+                    <Download size={16} />
+                    Download report
+                  </button>
+                </div>
                 <div className="text-sm text-slate-800 space-y-1 mb-10 leading-relaxed">
                   <p>Generated: {reportGeneratedAt.toLocaleString()}</p>
                   <p>Total Resources: {facilities.length}</p>
@@ -675,14 +742,14 @@ const FacilitiesAdmin = () => {
                   </label>
                   <input
                     type="file"
-                    accept=".jpg,.jpeg,.png,.webp,.gif"
+                    accept=".jpg,.jpeg,.png,.webp"
                     onChange={handleImageChange}
                     className="w-full bg-slate-800 border border-slate-700/50 p-4 rounded-2xl focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all text-white file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:bg-indigo-600 file:text-white file:font-semibold hover:file:bg-indigo-500"
                   />
                   <p className="text-slate-500 text-xs mt-2 italic">
-                    Required: JPG, PNG, WEBP, or GIF from your device, max 5MB.
-                    {editingFacility?.imageUrl
-                      ? ' When editing, you may keep the current image or choose a new file.'
+                    Required: JPG, PNG, or WEBP from your device.
+                    {editingFacility
+                      ? ' If you upload a new image while editing, the file must be 25KB or smaller.'
                       : ''}
                   </p>
                   {fieldErrors.image && <p className="text-red-400 text-xs mt-2">{fieldErrors.image}</p>}

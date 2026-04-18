@@ -54,7 +54,7 @@ public class ResourceController {
         if (file == null || file.isEmpty()) {
             throw new IllegalArgumentException("Image file is required when creating a resource");
         }
-        String imagePath = fileStorageService.storeFile(file);
+        String imagePath = fileStorageService.storeFile(file, false);
         resource.setImageUrl(imagePath);
 
         return new ResponseEntity<>(resourceService.createResource(resource), HttpStatus.CREATED);

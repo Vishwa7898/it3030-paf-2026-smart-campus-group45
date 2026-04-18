@@ -6,7 +6,6 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,40 +16,39 @@ import java.util.UUID;
 
 @Service
 public class FileStorageService {
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "gif");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
     private static final Set<String> ALLOWED_CONTENT_TYPES = Set.of(
-            "image/jpeg", "image/png", "image/webp", "image/gif"
+            "image/jpeg", "image/png", "image/webp"
     );
-    private static final long MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024; // 5MB
-    private static final int MIN_WIDTH = 400;
-    private static final int MIN_HEIGHT = 300;
+    private static final long MAX_FILE_SIZE_BYTES = 25 * 1024; // 25KB
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
 
     public String storeFile(MultipartFile file) throws IOException {
+        return storeFile(file, true);
+    }
+
+    public String storeFile(MultipartFile file, boolean enforceSizeLimit) throws IOException {
         String originalFileName = StringUtils.cleanPath(file.getOriginalFilename() == null ? "" : file.getOriginalFilename());
         String extension = getExtension(originalFileName);
 
         if (!ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new IllegalArgumentException("File type not supported. Allowed: JPG, JPEG, PNG, WEBP, GIF");
+            throw new IllegalArgumentException("File type not supported. Allowed: JPG, JPEG, PNG, WEBP");
         }
 
         if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
             throw new IllegalArgumentException("Invalid file content type. Upload a valid image");
         }
 
-        if (file.getSize() > MAX_FILE_SIZE_BYTES) {
-            throw new IllegalArgumentException("File size exceeds 5 MB limit");
+        if (enforceSizeLimit && file.getSize() > MAX_FILE_SIZE_BYTES) {
+            throw new IllegalArgumentException("File size exceeds 25 KB limit");
         }
 
         try (var inputStream = file.getInputStream()) {
-            BufferedImage image = ImageIO.read(inputStream);
+            var image = ImageIO.read(inputStream);
             if (image == null) {
                 throw new IllegalArgumentException("Invalid image file");
-            }
-            if (image.getWidth() < MIN_WIDTH || image.getHeight() < MIN_HEIGHT) {
-                throw new IllegalArgumentException("Image resolution too low. Minimum 400x300 required");
             }
         }
 
