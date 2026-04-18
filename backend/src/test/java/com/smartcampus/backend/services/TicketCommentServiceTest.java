@@ -48,4 +48,16 @@ class TicketCommentServiceTest {
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("authorized");
     }
+
+    @Test
+    void technicianCannotDeleteOthersComment() {
+        TicketComment c = new TicketComment();
+        c.setId("c1");
+        c.setAuthorId("alice");
+        when(commentRepository.findById("c1")).thenReturn(Optional.of(c));
+
+        assertThatThrownBy(() -> commentService.deleteComment("c1", "bob", "TECHNICIAN"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("authorized");
+    }
 }

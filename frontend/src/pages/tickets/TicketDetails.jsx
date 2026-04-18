@@ -111,6 +111,22 @@ const TicketDetails = () => {
     (currentUser?.role === 'ADMIN' || ticket?.submitterId === currentUser?.id);
   const technicianReadOnly =
     currentUser?.role === 'TECHNICIAN' && !canManageWorkflow && ticket;
+  const statusOptions = (() => {
+    if (!ticket) return [];
+    const current = ticket.status;
+    if (isAdmin) {
+      if (current === 'OPEN' || current === 'IN_PROGRESS') return [current, 'REJECTED'];
+      if (current === 'RESOLVED') return [current, 'CLOSED', 'REJECTED'];
+      return [current];
+    }
+    if (currentUser?.role === 'TECHNICIAN' && ticket.assigneeId === currentUser?.id) {
+      if (current === 'OPEN') return [current, 'IN_PROGRESS'];
+      if (current === 'IN_PROGRESS') return [current, 'RESOLVED'];
+      if (current === 'RESOLVED') return [current, 'CLOSED'];
+      return [current];
+    }
+    return [current];
+  })();
 
   if (loading) return (
     <div className="flex justify-center py-20">
@@ -278,8 +294,7 @@ const TicketDetails = () => {
                 resolutionNotes={ticket.resolutionNotes}
               />
               <p className="text-xs text-slate-500 mt-3 px-1 leading-relaxed">
-                Admins move your ticket through the workflow. If it is <strong>rejected</strong>, the reason appears
-                above. You can still discuss it in comments below.
+                Your assigned technician moves OPEN → IN_PROGRESS → RESOLVED. Admin can reject, and admin/system can close.
               </p>
             </div>
           )}
@@ -288,8 +303,8 @@ const TicketDetails = () => {
             <div className="rounded-2xl border border-amber-200 bg-amber-50/90 p-5 text-sm text-amber-950 sticky top-24">
               <p className="font-semibold">Read-only for you</p>
               <p className="mt-2 text-amber-900/90">
-                This ticket is assigned to <strong>{ticket.assigneeId || '—'}</strong>. Only that technician (or an
-                admin) can change status here. Ask an admin to assign you if you should handle it.
+                This ticket is assigned to <strong>{ticket.assigneeId || '—'}</strong>. Only that technician can move
+                work status on it. Ask an admin to assign you if you should handle it.
               </p>
             </div>
           )}
@@ -301,8 +316,8 @@ const TicketDetails = () => {
               </h3>
               <p className="text-xs text-slate-500 mb-4">
                 {isAdmin
-                  ? 'OPEN → IN_PROGRESS → RESOLVED → CLOSED, or REJECTED with a reason.'
-                  : 'As assignee: add resolution notes and move toward RESOLVED; admins handle rejection & assignment.'}
+                  ? 'Admin actions: assign technician, reject with reason, and close when appropriate.'
+                  : 'As assigned technician: OPEN → IN_PROGRESS → RESOLVED → CLOSED with notes on resolve.'}
               </p>
 
               {canDelete && (
@@ -325,13 +340,11 @@ const TicketDetails = () => {
                     onChange={(e) => setStatus(e.target.value)}
                     className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm font-medium"
                   >
-                    <option value="OPEN">Open</option>
-                    <option value="IN_PROGRESS">In progress</option>
-                    <option value="RESOLVED">Resolved</option>
-                    <option value="CLOSED">Closed</option>
-                    {(isAdmin || ticket.status === 'REJECTED') && (
-                      <option value="REJECTED">Rejected (requires reason)</option>
-                    )}
+                    {statusOptions.map((nextStatus) => (
+                      <option key={nextStatus} value={nextStatus}>
+                        {nextStatus === 'REJECTED' ? 'Rejected (requires reason)' : nextStatus.replace('_', ' ')}
+                      </option>
+                    ))}
                   </select>
                 </div>
 

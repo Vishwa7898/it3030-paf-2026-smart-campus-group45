@@ -1,5 +1,6 @@
 package com.smartcampus.backend.controller;
 
+import com.smartcampus.backend.dto.StudentTicketView;
 import com.smartcampus.backend.dto.TicketAssignRequest;
 import com.smartcampus.backend.dto.TicketRequest;
 import com.smartcampus.backend.dto.TicketStatusUpdateRequest;
@@ -47,6 +48,16 @@ public class IncidentTicketController {
         return ResponseEntity.ok(tickets);
     }
 
+    @GetMapping("/my")
+    public ResponseEntity<List<StudentTicketView>> myTickets(@RequestParam String studentId) {
+        return ResponseEntity.ok(ticketService.getMyTicketsWithComments(studentId));
+    }
+
+    @GetMapping("/assigned")
+    public ResponseEntity<List<IncidentTicket>> assignedTickets(@RequestParam String technicianId) {
+        return ResponseEntity.ok(ticketService.findAssignedTickets(technicianId));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<IncidentTicket> getTicketById(
             @PathVariable String id,
@@ -64,20 +75,26 @@ public class IncidentTicketController {
         return ResponseEntity.ok(ticket);
     }
 
-    @PatchMapping("/{id}/status")
+    @PutMapping("/{id}/status")
     public ResponseEntity<IncidentTicket> updateTicketStatus(
             @PathVariable String id,
             @Valid @RequestBody TicketStatusUpdateRequest body) {
+        String notes = body.getResolutionNotes();
+        if (body.getStatus() == TicketStatus.REJECTED
+                && body.getReason() != null
+                && !body.getReason().isBlank()) {
+            notes = body.getReason();
+        }
         IncidentTicket ticket = ticketService.updateTicketStatus(
                 id,
                 body.getStatus(),
-                body.getResolutionNotes(),
+                notes,
                 body.getActorId(),
                 body.getActorRole());
         return ResponseEntity.ok(ticket);
     }
 
-    @PatchMapping("/{id}/assign")
+    @PutMapping("/{id}/assign")
     public ResponseEntity<IncidentTicket> assignTicket(
             @PathVariable String id,
             @Valid @RequestBody TicketAssignRequest body) {

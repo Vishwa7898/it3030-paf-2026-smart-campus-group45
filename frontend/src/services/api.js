@@ -76,7 +76,7 @@ export const TicketService = {
     },
 
     updateTicketStatus: async (id, status, resolutionNotes = '') => {
-        const response = await api.patch(`/tickets/${id}/status`, {
+        const response = await api.put(`/tickets/${id}/status`, {
             status,
             resolutionNotes,
             ...actorPayload(),
@@ -85,7 +85,7 @@ export const TicketService = {
     },
 
     assignTicket: async (id, assigneeId) => {
-        const response = await api.patch(`/tickets/${id}/assign`, {
+        const response = await api.put(`/tickets/${id}/assign`, {
             assigneeId,
             ...actorPayload(),
         });

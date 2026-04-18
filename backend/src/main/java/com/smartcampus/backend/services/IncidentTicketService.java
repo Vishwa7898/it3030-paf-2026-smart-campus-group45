@@ -1,8 +1,10 @@
 package com.smartcampus.backend.services;
 
+import com.smartcampus.backend.dto.StudentTicketView;
 import com.smartcampus.backend.dto.TicketRequest;
 import com.smartcampus.backend.dto.TicketUpdateRequest;
 import com.smartcampus.backend.entity.IncidentTicket;
+import com.smartcampus.backend.entity.TicketComment;
 import com.smartcampus.backend.entity.TicketPriority;
 import com.smartcampus.backend.entity.TicketStatus;
 import com.smartcampus.backend.exception.ForbiddenException;
@@ -43,13 +45,14 @@ public class IncidentTicketService {
 
     public IncidentTicket createTicket(TicketRequest request) throws IOException {
         IncidentTicket ticket = new IncidentTicket();
-        ticket.setResourceId(request.getResourceId().trim());
-        ticket.setLocation(request.getLocation().trim());
+        ticket.setResourceId(trimOrDefault(request.getResourceId(), "—"));
+        ticket.setLocation(trimOrDefault(request.getLocation(), "—"));
         ticket.setCategory(request.getCategory().trim());
         ticket.setDescription(request.getDescription().trim());
         ticket.setPriority(request.getPriority());
         ticket.setContactDetails(request.getContactDetails().trim());
         ticket.setSubmitterId(request.getSubmitterId().trim());
+        ticket.setStatus(TicketStatus.OPEN);
 
         List<String> imagePaths = new ArrayList<>();
         if (request.getImages() != null && !request.getImages().isEmpty()) {
@@ -65,6 +68,35 @@ public class IncidentTicketService {
         ticket.setImagePaths(imagePaths);
 
         return ticketRepository.save(ticket);
+    }
+
+    private static String trimOrDefault(String value, String defaultIfBlank) {
+        if (value == null || value.isBlank()) {
+            return defaultIfBlank;
+        }
+        return value.trim();
+    }
+
+    public List<StudentTicketView> getMyTicketsWithComments(String studentId) {
+        if (studentId == null || studentId.isBlank()) {
+            throw new IllegalArgumentException("studentId is required");
+        }
+        String sid = studentId.trim();
+        List<IncidentTicket> tickets = ticketRepository.findBySubmitterId(sid);
+        List<StudentTicketView> out = new ArrayList<>();
+        for (IncidentTicket t : tickets) {
+            List<TicketComment> comments =
+                    ticketCommentRepository.findByTicketIdOrderByCreatedAtAsc(t.getId());
+            out.add(new StudentTicketView(t, comments));
+        }
+        return out;
+    }
+
+    public List<IncidentTicket> findAssignedTickets(String technicianId) {
+        if (technicianId == null || technicianId.isBlank()) {
+            throw new IllegalArgumentException("technicianId is required");
+        }
+        return new ArrayList<>(ticketRepository.findByAssigneeId(technicianId.trim()));
     }
 
     private String saveImage(MultipartFile file) throws IOException {
@@ -107,6 +139,11 @@ public class IncidentTicketService {
                 throw new IllegalArgumentException("viewerId is required for student (USER) requests");
             }
             list = new ArrayList<>(ticketRepository.findBySubmitterId(viewerId.trim()));
+        } else if (("TECHNICIAN".equals(role) || "STAFF".equals(role)) && !"ADMIN".equals(role)) {
+            if (viewerId == null || viewerId.isBlank()) {
+                throw new IllegalArgumentException("viewerId is required for technician requests");
+            }
+            list = new ArrayList<>(ticketRepository.findByAssigneeId(viewerId.trim()));
         } else if (submitterId != null && !submitterId.isBlank()) {
             list = new ArrayList<>(ticketRepository.findBySubmitterId(submitterId.trim()));
         } else if (assigneeId != null && !assigneeId.isBlank()) {
@@ -117,8 +154,9 @@ public class IncidentTicketService {
             list = new ArrayList<>(ticketRepository.findAll());
         }
 
+        boolean viewerScopedRole = "USER".equals(role) || "TECHNICIAN".equals(role) || "STAFF".equals(role);
         if (status != null
-                && ("USER".equals(role)
+                && (viewerScopedRole
                 || submitterId != null && !submitterId.isBlank()
                 || assigneeId != null && !assigneeId.isBlank())) {
             list.removeIf(t -> !Objects.equals(t.getStatus(), status));
@@ -162,6 +200,13 @@ public class IncidentTicketService {
             }
             if (!viewerId.trim().equals(ticket.getSubmitterId())) {
                 throw new ForbiddenException("You can only view your own tickets");
+            }
+        } else if ("TECHNICIAN".equals(role) || "STAFF".equals(role)) {
+            if (viewerId == null || viewerId.isBlank()) {
+                throw new IllegalArgumentException("viewerId is required for technician requests");
+            }
+            if (!viewerId.trim().equals(ticket.getAssigneeId())) {
+                throw new ForbiddenException("Technicians can only view assigned tickets");
             }
         }
         return ticket;
@@ -209,17 +254,16 @@ public class IncidentTicketService {
         boolean admin = "ADMIN".equals(role);
         boolean tech = "TECHNICIAN".equals(role) || "STAFF".equals(role);
         boolean assignee = ticket.getAssigneeId() != null && ticket.getAssigneeId().equals(actorId);
-        boolean submitter = ticket.getSubmitterId() != null && ticket.getSubmitterId().equals(actorId);
 
         if (next == TicketStatus.REJECTED) {
             if (!admin) {
                 throw new IllegalArgumentException("Only an admin can reject a ticket");
             }
             if (resolutionNotes == null || resolutionNotes.isBlank()) {
-                throw new IllegalArgumentException("A rejection reason is required");
+                throw new IllegalArgumentException("A rejection reason is required (use reason or resolutionNotes)");
             }
-            if (current != TicketStatus.OPEN && current != TicketStatus.IN_PROGRESS) {
-                throw new IllegalArgumentException("Tickets can only be rejected while OPEN or IN_PROGRESS");
+            if (current == TicketStatus.CLOSED || current == TicketStatus.REJECTED) {
+                throw new IllegalArgumentException("Cannot reject a closed or rejected ticket");
             }
             return;
         }
@@ -227,8 +271,8 @@ public class IncidentTicketService {
         switch (current) {
             case OPEN -> {
                 if (next == TicketStatus.IN_PROGRESS) {
-                    if (!admin && !tech) {
-                        throw new IllegalArgumentException("Only admin or technician can move a ticket to IN_PROGRESS");
+                    if (!tech || !assignee) {
+                        throw new IllegalArgumentException("Only the assigned technician can start work (OPEN → IN_PROGRESS)");
                     }
                     return;
                 }
@@ -236,8 +280,8 @@ public class IncidentTicketService {
             }
             case IN_PROGRESS -> {
                 if (next == TicketStatus.RESOLVED) {
-                    if (!admin && !assignee) {
-                        throw new IllegalArgumentException("Only the assignee or an admin can mark a ticket resolved");
+                    if (!assignee || !tech) {
+                        throw new IllegalArgumentException("Only the assigned technician can mark a ticket resolved");
                     }
                     if (resolutionNotes == null || resolutionNotes.isBlank()) {
                         throw new IllegalArgumentException("Resolution notes are required when marking a ticket resolved");
@@ -248,8 +292,8 @@ public class IncidentTicketService {
             }
             case RESOLVED -> {
                 if (next == TicketStatus.CLOSED) {
-                    if (!admin && !submitter) {
-                        throw new IllegalArgumentException("Only admin or the submitter can close a resolved ticket");
+                    if (!admin && !(tech && assignee)) {
+                        throw new IllegalArgumentException("Only an admin or the assigned technician can close a resolved ticket");
                     }
                     return;
                 }
@@ -268,9 +312,6 @@ public class IncidentTicketService {
             throw new IllegalArgumentException("Cannot assign a closed or rejected ticket");
         }
         ticket.setAssigneeId(assigneeId != null ? assigneeId.trim() : null);
-        if (ticket.getStatus() == TicketStatus.OPEN) {
-            ticket.setStatus(TicketStatus.IN_PROGRESS);
-        }
         return ticketRepository.save(ticket);
     }
 

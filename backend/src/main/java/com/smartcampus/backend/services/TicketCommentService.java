@@ -8,6 +8,7 @@ import com.smartcampus.backend.repository.TicketCommentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Locale;
 
 @Service
 public class TicketCommentService {
@@ -43,8 +44,7 @@ public class TicketCommentService {
     public TicketComment updateComment(String commentId, String authorId, String newContent) {
         TicketComment comment = commentRepository.findById(commentId)
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
-        
-        // Ownership check
+
         if (!comment.getAuthorId().equals(authorId)) {
             throw new IllegalArgumentException("User is not authorized to edit this comment");
         }
@@ -58,8 +58,9 @@ public class TicketCommentService {
                 .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
 
         boolean owner = comment.getAuthorId().equals(userId);
-        boolean staff = "ADMIN".equalsIgnoreCase(userRole) || "TECHNICIAN".equalsIgnoreCase(userRole);
-        if (!owner && !staff) {
+        String r = userRole == null ? "" : userRole.trim().toUpperCase(Locale.ROOT);
+        boolean admin = "ADMIN".equals(r);
+        if (!owner && !admin) {
             throw new IllegalArgumentException("User is not authorized to delete this comment");
         }
 

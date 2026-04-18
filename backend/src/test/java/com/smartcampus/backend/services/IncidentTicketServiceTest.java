@@ -84,18 +84,76 @@ class IncidentTicketServiceTest {
         assertThatThrownBy(() ->
                 service.updateTicketStatus("t1", TicketStatus.RESOLVED, "Fixed", "other", "TECHNICIAN"))
                 .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("assignee");
+                .hasMessageContaining("assigned technician");
     }
 
     @Test
-    void submitterCanCloseResolvedTicket() {
+    void assigneeTechnicianCanCloseResolvedTicket() {
         openTicket.setStatus(TicketStatus.RESOLVED);
         when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
         when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.updateTicketStatus("t1", TicketStatus.CLOSED, null, "student1", "USER");
+        service.updateTicketStatus("t1", TicketStatus.CLOSED, null, "tech1", "TECHNICIAN");
 
         verify(ticketRepository).save(any());
+    }
+
+    @Test
+    void adminCanCloseResolvedTicket() {
+        openTicket.setStatus(TicketStatus.RESOLVED);
+        openTicket.setAssigneeId("tech1");
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.updateTicketStatus("t1", TicketStatus.CLOSED, null, "admin1", "ADMIN");
+
+        verify(ticketRepository).save(any());
+    }
+
+    @Test
+    void studentCannotCloseResolvedTicket() {
+        openTicket.setStatus(TicketStatus.RESOLVED);
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+
+        assertThatThrownBy(() ->
+                service.updateTicketStatus("t1", TicketStatus.CLOSED, null, "student1", "USER"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("close");
+    }
+
+    @Test
+    void assignKeepsTicketOpen() {
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.assignTicket("t1", "tech1", "admin1", "ADMIN");
+
+        ArgumentCaptor<IncidentTicket> cap = ArgumentCaptor.forClass(IncidentTicket.class);
+        verify(ticketRepository).save(cap.capture());
+        assertThat(cap.getValue().getStatus()).isEqualTo(TicketStatus.OPEN);
+        assertThat(cap.getValue().getAssigneeId()).isEqualTo("tech1");
+    }
+
+    @Test
+    void assignedTechnicianCanStartInProgress() {
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
+
+        service.updateTicketStatus("t1", TicketStatus.IN_PROGRESS, null, "tech1", "TECHNICIAN");
+
+        ArgumentCaptor<IncidentTicket> cap = ArgumentCaptor.forClass(IncidentTicket.class);
+        verify(ticketRepository).save(cap.capture());
+        assertThat(cap.getValue().getStatus()).isEqualTo(TicketStatus.IN_PROGRESS);
+    }
+
+    @Test
+    void adminCannotMoveOpenToInProgress() {
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+
+        assertThatThrownBy(() ->
+                service.updateTicketStatus("t1", TicketStatus.IN_PROGRESS, null, "admin1", "ADMIN"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("assigned technician");
     }
 
     @Test

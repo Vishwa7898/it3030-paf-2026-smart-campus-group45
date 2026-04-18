@@ -73,9 +73,9 @@ const TicketList = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-7">
       <div
-        className={`flex gap-3 p-4 rounded-2xl border text-sm ${
+        className={`flex gap-3 p-5 rounded-2xl border text-base ${
           isStudent
             ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
             : isAdmin
@@ -83,43 +83,43 @@ const TicketList = () => {
               : 'bg-amber-50/90 border-amber-200 text-amber-950'
         }`}
       >
-        <Info className="w-5 h-5 shrink-0 mt-0.5 opacity-80" />
+        <Info className="w-6 h-6 shrink-0 mt-0.5 opacity-80" />
         <div>
-          <p className="font-semibold">
+          <p className="font-bold text-lg">
             {isStudent && 'Student view — only your submitted tickets'}
             {isAdmin && 'Admin view — all tickets from every student'}
-            {isTechnician && !isAdmin && 'Technician view — all tickets (update status when you are the assignee)'}
+            {isTechnician && !isAdmin && 'Technician view — only tickets assigned to you'}
           </p>
-          <p className="text-xs mt-1 opacity-90 leading-relaxed">
+          <p className="text-sm mt-1.5 opacity-90 leading-relaxed">
             {isStudent &&
               'You will see OPEN, IN_PROGRESS, RESOLVED, CLOSED, or REJECTED (with reason) on each card. Open a ticket for the full progress timeline.'}
             {isAdmin &&
               'Use ticket details to assign staff and move the workflow: OPEN → IN_PROGRESS → RESOLVED → CLOSED, or set REJECTED with a reason.'}
             {isTechnician && !isAdmin &&
-              'After an admin assigns you (your id: tech-jamith), you can add resolution notes and mark IN_PROGRESS → RESOLVED.'}
+              'You only see tickets assigned to you. Start work with OPEN → IN_PROGRESS, then IN_PROGRESS → RESOLVED.'}
           </p>
         </div>
       </div>
 
       {/* Header Actions */}
-      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-200">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4 bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
         <div className="flex gap-4 items-center">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <input 
               type="text" 
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={isStudent ? 'Search your tickets…' : 'Search all tickets…'}
-              className="pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-full sm:w-64"
+              className="pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-base focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all w-full sm:w-72"
             />
           </div>
           <div className="flex items-center gap-2">
-            <Filter className="w-4 h-4 text-slate-400" />
+            <Filter className="w-5 h-5 text-slate-400" />
             <select 
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
-              className="bg-transparent border-none text-sm text-slate-600 focus:outline-none cursor-pointer"
+              className="bg-transparent border-none text-base text-slate-700 focus:outline-none cursor-pointer font-medium"
             >
               <option value="ALL">All Status</option>
               <option value="OPEN">Open</option>
@@ -131,13 +131,15 @@ const TicketList = () => {
           </div>
         </div>
         
-        <Link 
-          to="/tickets/new" 
-          className="bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2.5 rounded-xl text-sm font-medium transition-colors shadow-sm shadow-indigo-200 flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" />
-          Create Ticket
-        </Link>
+        {isStudent && (
+          <Link 
+            to="/tickets/new" 
+            className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-5 py-3 rounded-xl text-base font-semibold transition-colors shadow-sm shadow-indigo-200 flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Create Ticket
+          </Link>
+        )}
       </div>
 
       {/* Ticket Grid/List */}

@@ -13,6 +13,9 @@ public class TicketStatusUpdateRequest {
 
     private String resolutionNotes;
 
+    /** When status is REJECTED, use this as the rejection reason (alternative to resolutionNotes). */
+    private String reason;
+
     @NotBlank
     private String actorId;
 

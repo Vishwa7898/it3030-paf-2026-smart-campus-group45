@@ -40,7 +40,8 @@ public class TicketCommentController {
             @PathVariable String commentId,
             @Valid @RequestBody TicketCommentRequest request) {
         // authorId is simulated to be passed in request body for validation
-        TicketComment comment = commentService.updateComment(commentId, request.getAuthorId(), request.getContent());
+        TicketComment comment = commentService.updateComment(
+                commentId, request.getAuthorId(), request.getContent());
         return ResponseEntity.ok(comment);
     }
 
