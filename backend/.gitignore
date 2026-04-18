@@ -31,3 +31,7 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Runtime uploads (keep directory only)
+uploads/*
+!uploads/.gitkeep

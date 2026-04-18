@@ -1,2 +1,24 @@
-/* Component specific styles will go here if needed.
-   Currently using utility classes and index.css base styles. */
+/* Custom styles for SmartCampus */
+
+.glass-morphism {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #818cf8, #6366f1);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+input::placeholder {
+  color: #64748b;
+}
+
+select option {
+  background: #0f172a;
+  color: white;
+}
