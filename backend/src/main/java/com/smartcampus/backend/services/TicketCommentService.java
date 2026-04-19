@@ -1,0 +1,69 @@
+package com.smartcampus.backend.services;
+
+import com.smartcampus.backend.dto.TicketCommentRequest;
+import com.smartcampus.backend.entity.TicketComment;
+import com.smartcampus.backend.exception.ForbiddenException;
+import com.smartcampus.backend.exception.ResourceNotFoundException;
+import com.smartcampus.backend.repository.TicketCommentRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.List;
+import java.util.Locale;
+
+@Service
+public class TicketCommentService {
+
+    private final TicketCommentRepository commentRepository;
+    private final IncidentTicketService ticketService; // To ensure ticket exists
+
+    public TicketCommentService(TicketCommentRepository commentRepository, IncidentTicketService ticketService) {
+        this.commentRepository = commentRepository;
+        this.ticketService = ticketService;
+    }
+
+    public TicketComment addComment(String ticketId, TicketCommentRequest request) {
+        var ticket = ticketService.requireTicket(ticketId);
+        if ("USER".equalsIgnoreCase(request.getAuthorRole())
+                && !request.getAuthorId().equals(ticket.getSubmitterId())) {
+            throw new ForbiddenException("You can only comment on your own tickets");
+        }
+
+        TicketComment comment = new TicketComment();
+        comment.setTicketId(ticketId);
+        comment.setAuthorId(request.getAuthorId());
+        comment.setAuthorRole(request.getAuthorRole());
+        comment.setContent(request.getContent());
+
+        return commentRepository.save(comment);
+    }
+
+    public List<TicketComment> getCommentsByTicketId(String ticketId) {
+        return commentRepository.findByTicketIdOrderByCreatedAtDesc(ticketId);
+    }
+
+    public TicketComment updateComment(String commentId, String authorId, String newContent) {
+        TicketComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+
+        if (!comment.getAuthorId().equals(authorId)) {
+            throw new IllegalArgumentException("User is not authorized to edit this comment");
+        }
+
+        comment.setContent(newContent);
+        return commentRepository.save(comment);
+    }
+
+    public void deleteComment(String commentId, String userId, String userRole) {
+        TicketComment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new ResourceNotFoundException("Comment not found"));
+
+        boolean owner = comment.getAuthorId().equals(userId);
+        String r = userRole == null ? "" : userRole.trim().toUpperCase(Locale.ROOT);
+        boolean admin = "ADMIN".equals(r);
+        if (!owner && !admin) {
+            throw new IllegalArgumentException("User is not authorized to delete this comment");
+        }
+
+        commentRepository.delete(comment);
+    }
+}

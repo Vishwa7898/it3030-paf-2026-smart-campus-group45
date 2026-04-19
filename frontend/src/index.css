@@ -1,28 +1,81 @@
 @import "tailwindcss";
 
-:root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+@theme {
+  /* අලුත් branch එකේ variables dark mode එකට ගැලපෙන සේ සකස් කළා */
+  --color-slate-50: #f8fafc;
+  --color-slate-100: #f1f5f9;
+  --color-slate-200: #e2e8f0;
+  --color-slate-400: #94a3b8;
+  --color-slate-700: #334155;
+  --color-slate-800: #1e293b;
+  --color-slate-900: #0f172a; /* Base dark color */
+  
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+  --color-indigo-700: #4338ca;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
+  --font-sans: "Inter", "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Poppins", "Segoe UI", sans-serif;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    background-color: #0f172a;
+    color: #e2e8f0;
+  }
+
+  body {
+    @apply text-slate-200 font-sans antialiased bg-[#0f172a];
+    margin: 0;
+    min-height: 100vh;
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  #root {
+    width: 100%;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+
+  h1, h2, h3, h4 {
+    font-family: var(--font-heading);
+    @apply text-white font-bold tracking-tight;
+  }
+
+  h1 { font-size: clamp(2rem, 3vw, 2.8rem); }
+  h2 { font-size: clamp(1.7rem, 2.4vw, 2.25rem); }
+}
+
+/* --- අලුත් Ticketing System එකේ Background Animation එක (Dark Version) --- */
+@keyframes mesh-shift {
+  0%, 100% { opacity: 0.5; transform: scale(1) translate(0, 0); }
+  50% { opacity: 0.3; transform: scale(1.05) translate(2%, -1%); }
+}
+
+.app-bg-mesh {
+  position: relative;
   background-color: #0f172a;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  /* Dark mesh gradient එකක් සකස් කළා */
+  background-image:
+    radial-gradient(ellipse 120% 80% at 0% 0%, rgba(79, 70, 229, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse 100% 70% at 100% 10%, rgba(139, 92, 246, 0.1) 0%, transparent 40%),
+    radial-gradient(ellipse 80% 60% at 50% 100%, rgba(30, 41, 59, 0.5) 0%, transparent 50%);
+  background-attachment: fixed;
 }
 
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+.app-bg-mesh::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 30%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+  animation: mesh-shift 15s ease-in-out infinite;
+  z-index: 0;
 }
 
-#root {
-  width: 100%;
+/* Glass effect panels සඳහා පොදු class එකක් */
+.glass-panel {
+  @apply bg-slate-900/40 backdrop-blur-md border border-slate-800/50 shadow-xl;
 }

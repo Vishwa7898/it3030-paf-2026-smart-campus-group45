@@ -24,18 +24,32 @@ public class SecurityConfig {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
+                // OPTIONS requests permit all (CORS සඳහා වැදගත්)
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                .requestMatchers(HttpMethod.GET, "/api/resources/**", "/uploads/**").permitAll()
+                
+                // Static resources සහ uploads permit all
+                .requestMatchers("/uploads/**").permitAll()
+
+                // Resources API - GET කාටත් පුළුවන්, අනෙක්වා ADMIN ට පමණයි
+                .requestMatchers(HttpMethod.GET, "/api/resources/**").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/resources/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/api/resources/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.PATCH, "/api/resources/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.DELETE, "/api/resources/**").hasRole("ADMIN")
+
+                // අලුත් Feature එක (Maintenance/Ticketing) සඳහා දැනට permitAll කර ඇත
+                // පසුව මෙය .authenticated() හෝ Roles වලට සීමා කළ හැක
+                .requestMatchers("/api/incidents/**", "/api/maintenance/**").permitAll()
+                
+                // අනෙක් සියලුම API ඉල්ලීම් සඳහා login වී තිබිය යුතුයි
                 .anyRequest().authenticated()
             )
             .httpBasic(httpBasic -> {});
+        
         return http.build();
     }
 
+    // Testing සඳහා සාදා ඇති පරිශීලකයන්
     @Bean
     public UserDetailsService userDetailsService(PasswordEncoder passwordEncoder) {
         return new InMemoryUserDetailsManager(
