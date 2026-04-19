@@ -20,6 +20,7 @@ export function AuthProvider({ children }) {
   const roleNames = useMemo(() => roleNamesFromUser(user), [user]);
   const isAdmin = roleNames.includes('ADMIN');
   const isStudent = roleNames.includes('USER') && !isAdmin;
+  const isTechnician = roleNames.includes('TECHNICIAN');
 
   async function fetchJson(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, {
@@ -87,6 +88,7 @@ export function AuthProvider({ children }) {
         checkAuth,
         isAdmin,
         isStudent,
+        isTechnician,
         roleNames,
       }}
     >

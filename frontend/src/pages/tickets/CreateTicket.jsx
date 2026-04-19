@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Upload, X, Save, ArrowLeft } from 'lucide-react';
 import { TicketService } from '../../services/api';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const CreateTicket = () => {
   const navigate = useNavigate();

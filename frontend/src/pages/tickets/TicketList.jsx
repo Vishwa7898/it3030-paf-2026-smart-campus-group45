@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Plus, Search, Filter, AlertCircle, Clock, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { TicketService } from '../../services/api';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const TicketList = () => {
   const { user, isStudent, isAdmin, isTechnician } = useAuth();
@@ -10,6 +10,8 @@ const TicketList = () => {
   const [data, setData] = useState([]);
   const [filter, setFilter] = useState('ALL');
   const [search, setSearch] = useState('');
+  const location = useLocation();
+  const baseUrl = location.pathname.startsWith('/admin') ? '/admin/tickets' : '/tickets';
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
@@ -168,7 +170,7 @@ const TicketList = () => {
           {data.map((ticket) => (
             <Link 
               key={ticket.id} 
-              to={`/tickets/${ticket.id}`}
+              to={`${baseUrl}/${ticket.id}`}
               className="group block bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 relative overflow-hidden"
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-indigo-500 transition-colors"></div>

@@ -1,17 +1,19 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Clock, AlertCircle, XCircle, FileText, User, Trash2 } from 'lucide-react';
 import { TicketService, getImageUrl } from '../../services/api';
 import CommentSection from '../../components/CommentSection';
 import TicketProgressStepper from '../../components/TicketProgressStepper';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const TicketDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser, isStudent, isAdmin } = useAuth();
+  const { user: currentUser, isStudent, isAdmin, isTechnician } = useAuth();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
+  const location = useLocation();
+  const backUrl = location.pathname.startsWith('/admin') ? '/admin/tickets' : '/tickets';
   
   const [status, setStatus] = useState('');
   const [resolutionNotes, setResolutionNotes] = useState('');
@@ -99,18 +101,18 @@ const TicketDetails = () => {
     }
   };
 
-  const canAssign = currentUser?.role === 'ADMIN';
+  const canAssign = isAdmin;
   const canManageWorkflow =
-    currentUser?.role === 'ADMIN' ||
-    (currentUser?.role === 'TECHNICIAN' && ticket?.assigneeId === currentUser?.id);
+    isAdmin ||
+    (isTechnician && ticket?.assigneeId === currentUser?.id);
   const canDelete =
-    currentUser?.role === 'ADMIN' ||
+    isAdmin ||
     (ticket?.status === 'OPEN' && ticket?.submitterId === currentUser?.id);
   const canEditOpen =
     ticket?.status === 'OPEN' &&
-    (currentUser?.role === 'ADMIN' || ticket?.submitterId === currentUser?.id);
+    (isAdmin || ticket?.submitterId === currentUser?.id);
   const technicianReadOnly =
-    currentUser?.role === 'TECHNICIAN' && !canManageWorkflow && ticket;
+    isTechnician && !canManageWorkflow && ticket;
   const statusOptions = (() => {
     if (!ticket) return [];
     const current = ticket.status;
@@ -119,7 +121,7 @@ const TicketDetails = () => {
       if (current === 'RESOLVED') return [current, 'CLOSED', 'REJECTED'];
       return [current];
     }
-    if (currentUser?.role === 'TECHNICIAN' && ticket.assigneeId === currentUser?.id) {
+    if (isTechnician && ticket.assigneeId === currentUser?.id) {
       if (current === 'OPEN') return [current, 'IN_PROGRESS'];
       if (current === 'IN_PROGRESS') return [current, 'RESOLVED'];
       if (current === 'RESOLVED') return [current, 'CLOSED'];
@@ -151,7 +153,7 @@ const TicketDetails = () => {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
         <Link 
-          to="/tickets"
+          to={backUrl}
           className="p-2 rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
