@@ -20,6 +20,7 @@ import FacilitiesUser from './components/FacilitiesUser';
 import AdminLayout from './components/AdminLayout';
 import NotificationAdmin from './pages/admin/NotificationAdmin';
 import UserManagement from './pages/admin/UserManagement';
+import AdminBookings from './pages/admin/AdminBookings';
 import BookingRequestPage from './pages/bookings/BookingRequestPage';
 import MyBookingsPage from './pages/bookings/MyBookingsPage';
 
@@ -80,7 +81,7 @@ function App() {
                   <Route path="facilities" element={<FacilitiesAdmin />} />
                   {/* Placeholders for team members to link later */}
                   <Route path="tickets" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Tickets Management (Pending Implementation)</div>} />
-                  <Route path="bookings" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Bookings Management (Pending Implementation)</div>} />
+                  <Route path="bookings" element={<AdminBookings />} />
                 </Route>
 
                 {/* Facilities Section */}
