@@ -321,13 +321,32 @@ const FacilitiesUser = () => {
                           </div>
                         </div>
 
-                        <button
-                          type="button"
-                          onClick={() => openDetail(facility)}
-                          className="w-full mt-6 py-4 bg-slate-700/50 hover:bg-indigo-600 border border-slate-600/50 hover:border-indigo-400 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2"
-                        >
-                          View details
-                        </button>
+                        <div className="flex flex-col gap-2 mt-6">
+                          <button
+                            type="button"
+                            onClick={() => openDetail(facility)}
+                            className="w-full py-4 bg-slate-700/50 hover:bg-indigo-600 border border-slate-600/50 hover:border-indigo-400 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2"
+                          >
+                            View details
+                          </button>
+                          {facility.status === 'ACTIVE' ? (
+                            <button
+                              type="button"
+                              onClick={() => alert('Proceeding to booking...')}
+                              className="w-full py-4 bg-emerald-600/80 hover:bg-emerald-500 border border-emerald-500/50 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2"
+                            >
+                              Book now
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => alert('Booking is not available for this facility.')}
+                              className="w-full py-4 bg-slate-800/80 border border-slate-700/50 text-slate-500 hover:text-slate-400 font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2"
+                            >
+                              Book now
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </motion.div>
                   ))}
