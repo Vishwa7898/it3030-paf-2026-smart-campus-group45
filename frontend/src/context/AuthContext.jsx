@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { writeStoredUser } from '../auth/authStorage';
 
 const AuthContext = createContext();
 
@@ -10,6 +11,30 @@ function roleNamesFromUser(user) {
   const raw = user.roles;
   const arr = Array.isArray(raw) ? raw : [];
   return arr.map((r) => (typeof r === 'string' ? r : r?.name ?? String(r)));
+}
+
+function primaryRoleFromNames(names) {
+  if (names.includes('ADMIN')) return 'ADMIN';
+  if (names.includes('TECHNICIAN')) return 'TECHNICIAN';
+  if (names.includes('USER')) return 'USER';
+  return '';
+}
+
+function toCompatStoredUser(user) {
+  const names = roleNamesFromUser(user);
+  const role = primaryRoleFromNames(names);
+  const id =
+    user?.id ||
+    user?.userId ||
+    user?.studentId ||
+    user?.email ||
+    '';
+  if (!id || !role) return null;
+  return {
+    id,
+    role,
+    displayName: user?.displayName || user?.name || user?.email || id,
+  };
 }
 
 export function AuthProvider({ children }) {
@@ -48,8 +73,10 @@ export function AuthProvider({ children }) {
     try {
       const me = await fetchJson('/api/auth/me');
       setUser(me);
+      writeStoredUser(toCompatStoredUser(me));
     } catch {
       setUser(null);
+      writeStoredUser(null);
       // Not necessarily an error if they are just not logged in
     } finally {
       setLoading(false);
@@ -71,6 +98,7 @@ export function AuthProvider({ children }) {
       console.error('Logout error', e);
     } finally {
       setUser(null);
+      writeStoredUser(null);
       // Redirect to home after logout
       window.location.href = '/';
     }

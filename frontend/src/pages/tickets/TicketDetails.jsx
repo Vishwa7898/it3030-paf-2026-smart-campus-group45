@@ -95,7 +95,7 @@ const TicketDetails = () => {
     if (!window.confirm('Delete this ticket permanently?')) return;
     try {
       await TicketService.deleteTicket(id);
-      navigate('/tickets');
+      navigate(backUrl);
     } catch (err) {
       alert(apiError(err));
     }
@@ -107,7 +107,7 @@ const TicketDetails = () => {
     (isTechnician && ticket?.assigneeId === currentUser?.id);
   const canDelete =
     isAdmin ||
-    (ticket?.status === 'OPEN' && ticket?.submitterId === currentUser?.id);
+    ((ticket?.status === 'OPEN' || ticket?.status === 'REJECTED') && ticket?.submitterId === currentUser?.id);
   const canEditOpen =
     ticket?.status === 'OPEN' &&
     (isAdmin || ticket?.submitterId === currentUser?.id);
@@ -298,6 +298,15 @@ const TicketDetails = () => {
               <p className="text-xs text-slate-500 mt-3 px-1 leading-relaxed">
                 Your assigned technician moves OPEN → IN_PROGRESS → RESOLVED. Admin can reject, and admin/system can close.
               </p>
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={handleDeleteTicket}
+                  className="w-full mt-4 py-2.5 flex items-center justify-center gap-2 text-sm text-red-700 border border-red-200 rounded-xl bg-red-50 hover:bg-red-100"
+                >
+                  <Trash2 className="w-4 h-4" /> Remove ticket
+                </button>
+              )}
             </div>
           )}
 

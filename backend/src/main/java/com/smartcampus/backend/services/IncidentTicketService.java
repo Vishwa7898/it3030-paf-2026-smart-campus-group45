@@ -352,8 +352,11 @@ public class IncidentTicketService {
         String role = normalizeRole(actorRole);
         boolean admin = "ADMIN".equals(role);
         boolean owner = ticket.getSubmitterId() != null && ticket.getSubmitterId().equals(actorId != null ? actorId.trim() : "");
-        if (!admin && !(owner && ticket.getStatus() == TicketStatus.OPEN)) {
-            throw new IllegalArgumentException("Only an admin can delete any ticket, or the submitter can delete an OPEN ticket");
+        boolean ownerCanDelete = owner
+                && (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.REJECTED);
+        if (!admin && !ownerCanDelete) {
+            throw new IllegalArgumentException(
+                    "Only an admin can delete any ticket, or the submitter can delete an OPEN/REJECTED ticket");
         }
         ticketCommentRepository.deleteByTicketId(id);
         ticketRepository.delete(ticket);

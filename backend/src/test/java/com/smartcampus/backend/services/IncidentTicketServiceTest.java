@@ -167,6 +167,17 @@ class IncidentTicketServiceTest {
     }
 
     @Test
+    void deleteRejectedTicketBySubmitter() {
+        openTicket.setStatus(TicketStatus.REJECTED);
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+
+        service.deleteTicket("t1", "student1", "USER");
+
+        verify(ticketCommentRepository).deleteByTicketId("t1");
+        verify(ticketRepository).delete(openTicket);
+    }
+
+    @Test
     void updateDetailsWhenOpen() {
         when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
         when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));

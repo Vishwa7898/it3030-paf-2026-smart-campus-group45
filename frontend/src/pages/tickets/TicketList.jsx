@@ -171,27 +171,27 @@ const TicketList = () => {
             <Link 
               key={ticket.id} 
               to={`${baseUrl}/${ticket.id}`}
-              className="group block bg-white rounded-2xl p-6 border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-300 transition-all duration-200 relative overflow-hidden"
+              className="group block rounded-2xl p-7 border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all duration-200 relative overflow-hidden bg-amber-50"
             >
-              <div className="absolute top-0 left-0 w-1 h-full bg-slate-200 group-hover:bg-indigo-500 transition-colors"></div>
+              <div className="absolute top-0 left-0 w-1 h-full bg-amber-200 group-hover:bg-amber-500 transition-colors"></div>
               
               <div className="flex justify-between items-start mb-4">
                 {getStatusBadge(ticket.status)}
                 <span className="text-xs text-slate-400 font-medium">#{ticket.id?.substring(0, 8)}</span>
               </div>
               
-              <h3 className="text-lg font-bold text-slate-800 mb-1 line-clamp-1 group-hover:text-indigo-700 transition-colors">
+              <h3 className="text-xl font-extrabold text-slate-900 mb-1 line-clamp-1 group-hover:text-amber-800 transition-colors">
                 {ticket.category}
               </h3>
               
-              <p className="text-sm text-slate-500 line-clamp-2 mb-4 h-10">
+              <p className="text-base text-slate-700 line-clamp-2 mb-4 h-12">
                 {ticket.description}
               </p>
               
-              <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-between mt-auto pt-4 border-t border-amber-100">
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-slate-400">Resource/Location</span>
-                  <span className="text-sm font-medium text-slate-700">{ticket.resourceId} / {ticket.location}</span>
+                  <span className="text-base font-semibold text-slate-800">{ticket.resourceId} / {ticket.location}</span>
                 </div>
                 {getPriorityBadge(ticket.priority)}
               </div>
