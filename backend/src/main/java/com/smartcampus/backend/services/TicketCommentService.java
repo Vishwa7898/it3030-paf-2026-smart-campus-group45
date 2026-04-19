@@ -5,6 +5,7 @@ import com.smartcampus.backend.entity.TicketComment;
 import com.smartcampus.backend.exception.ForbiddenException;
 import com.smartcampus.backend.exception.ResourceNotFoundException;
 import com.smartcampus.backend.notification.NotificationService;
+import com.smartcampus.backend.repository.TicketCommentRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
