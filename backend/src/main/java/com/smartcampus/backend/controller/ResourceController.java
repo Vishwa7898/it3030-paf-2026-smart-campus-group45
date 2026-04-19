@@ -35,7 +35,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/resources")
 @RequiredArgsConstructor
-@CrossOrigin(origins = "*") // For local development
 public class ResourceController {
     private final ResourceService resourceService;
     private final FileStorageService fileStorageService;

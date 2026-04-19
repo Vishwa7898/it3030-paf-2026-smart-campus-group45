@@ -5,6 +5,9 @@ export const API_BASE_URL =
   (typeof import.meta !== 'undefined' && import.meta.env?.VITE_API_BASE_URL) ||
   'http://localhost:8080';
 
+// Enable sending cookies for cross-origin requests
+axios.defaults.withCredentials = true;
+
 const API_URL = `${API_BASE_URL}/api/resources`;
 const ADMIN_AUTH = `Basic ${btoa('admin:admin123')}`;
 
