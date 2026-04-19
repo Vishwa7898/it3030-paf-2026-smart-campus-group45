@@ -67,7 +67,8 @@ function App() {
                   <Route path="users" element={<UserManagement />} />
                   <Route path="facilities" element={<FacilitiesAdmin />} />
                   {/* Placeholders for team members to link later */}
-                  <Route path="tickets" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Tickets Management (Pending Implementation)</div>} />
+                  <Route path="tickets" element={<TicketList />} />
+                  <Route path="tickets/:id" element={<TicketDetails />} />
                   <Route path="bookings" element={<AdminBookings />} />
                 </Route>
 
