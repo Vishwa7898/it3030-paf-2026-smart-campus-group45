@@ -17,9 +17,12 @@ const TicketList = () => {
     setLoading(true);
     try {
       const statusFilter = filter === 'ALL' ? null : filter;
+      const viewerRole = isAdmin ? 'ADMIN' : isTechnician ? 'TECHNICIAN' : 'USER';
       const result = await TicketService.getAllTickets({
         status: statusFilter,
         q: search.trim() || undefined,
+        viewerRole,
+        viewerId: user?.id || user?.userId || user?.studentId || user?.email,
       });
       setData(result);
     } catch (error) {
@@ -27,14 +30,14 @@ const TicketList = () => {
     } finally {
       setLoading(false);
     }
-  }, [filter, search, user?.id, user?.role]);
+  }, [filter, search, user]);
 
   useEffect(() => {
     loadTickets();
   }, [loadTickets]);
 
   const getStatusIcon = (status) => {
-    switch(status) {
+    switch (status) {
       case 'OPEN': return <AlertCircle className="w-4 h-4 text-amber-500" />;
       case 'IN_PROGRESS': return <Clock className="w-4 h-4 text-blue-500" />;
       case 'RESOLVED': return <CheckCircle2 className="w-4 h-4 text-emerald-500" />;
@@ -77,13 +80,12 @@ const TicketList = () => {
   return (
     <div className="space-y-7">
       <div
-        className={`flex gap-3 p-5 rounded-2xl border text-base ${
-          isStudent
+        className={`flex gap-3 p-5 rounded-2xl border text-base ${isStudent
             ? 'bg-emerald-50/90 border-emerald-200 text-emerald-900'
             : isAdmin
               ? 'bg-violet-50/90 border-violet-200 text-violet-900'
               : 'bg-amber-50/90 border-amber-200 text-amber-950'
-        }`}
+          }`}
       >
         <Info className="w-6 h-6 shrink-0 mt-0.5 opacity-80" />
         <div>
@@ -108,8 +110,8 @@ const TicketList = () => {
         <div className="flex gap-4 items-center">
           <div className="relative">
             <Search className="w-5 h-5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
-            <input 
-              type="text" 
+            <input
+              type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={isStudent ? 'Search your tickets…' : 'Search all tickets…'}
@@ -118,7 +120,7 @@ const TicketList = () => {
           </div>
           <div className="flex items-center gap-2">
             <Filter className="w-5 h-5 text-slate-400" />
-            <select 
+            <select
               value={filter}
               onChange={(e) => setFilter(e.target.value)}
               className="bg-transparent border-none text-base text-slate-700 focus:outline-none cursor-pointer font-medium"
@@ -132,10 +134,10 @@ const TicketList = () => {
             </select>
           </div>
         </div>
-        
+
         {isStudent && (
-          <Link 
-            to="/tickets/new" 
+          <Link
+            to="/tickets/new"
             className="bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white px-5 py-3 rounded-xl text-base font-semibold transition-colors shadow-sm shadow-indigo-200 flex items-center gap-2"
           >
             <Plus className="w-5 h-5" />
@@ -158,8 +160,8 @@ const TicketList = () => {
           <p className="text-slate-500 max-w-sm mx-auto mb-6">
             There are no incident tickets matching your current filter. Create a new ticket if you found an issue.
           </p>
-          <Link 
-            to="/tickets/new" 
+          <Link
+            to="/tickets/new"
             className="text-indigo-600 font-medium hover:text-indigo-700"
           >
             Create your first ticket &rarr;
@@ -168,26 +170,26 @@ const TicketList = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {data.map((ticket) => (
-            <Link 
-              key={ticket.id} 
+            <Link
+              key={ticket.id}
               to={`${baseUrl}/${ticket.id}`}
               className="group block rounded-2xl p-7 border border-amber-200 shadow-sm hover:shadow-md hover:border-amber-300 transition-all duration-200 relative overflow-hidden bg-amber-50"
             >
               <div className="absolute top-0 left-0 w-1 h-full bg-amber-200 group-hover:bg-amber-500 transition-colors"></div>
-              
+
               <div className="flex justify-between items-start mb-4">
                 {getStatusBadge(ticket.status)}
                 <span className="text-xs text-slate-400 font-medium">#{ticket.id?.substring(0, 8)}</span>
               </div>
-              
+
               <h3 className="text-xl font-extrabold text-slate-900 mb-1 line-clamp-1 group-hover:text-amber-800 transition-colors">
                 {ticket.category}
               </h3>
-              
+
               <p className="text-base text-slate-700 line-clamp-2 mb-4 h-12">
                 {ticket.description}
               </p>
-              
+
               <div className="flex items-center justify-between mt-auto pt-4 border-t border-amber-100">
                 <div className="flex flex-col gap-1">
                   <span className="text-xs text-slate-400">Resource/Location</span>

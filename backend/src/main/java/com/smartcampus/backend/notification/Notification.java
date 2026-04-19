@@ -13,6 +13,7 @@ public class Notification {
     private String title;
     private String message;
     private String category;
+    private String actionUrl;
     private boolean read;
     private Instant createdAt;
 
@@ -54,6 +55,14 @@ public class Notification {
 
     public void setCategory(String category) {
         this.category = category;
+    }
+
+    public String getActionUrl() {
+        return actionUrl;
+    }
+
+    public void setActionUrl(String actionUrl) {
+        this.actionUrl = actionUrl;
     }
 
     public boolean isRead() {

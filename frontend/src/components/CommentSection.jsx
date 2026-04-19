@@ -5,6 +5,12 @@ import { useAuth } from '../context/AuthContext';
 
 const CommentSection = ({ ticketId, currentUser }) => {
   const { isAdmin, isTechnician } = useAuth();
+  const currentUserId =
+    currentUser?.id ||
+    currentUser?.userId ||
+    currentUser?.studentId ||
+    currentUser?.email ||
+    '';
   const [comments, setComments] = useState([]);
   const [newComment, setNewComment] = useState('');
   const [loading, setLoading] = useState(false);
@@ -76,7 +82,7 @@ const CommentSection = ({ ticketId, currentUser }) => {
       
       <div className="space-y-4">
         {comments.map(comment => {
-          const isOwner = comment.authorId === currentUser.id;
+          const isOwner = comment.authorId === currentUserId;
           const staffModerator = isAdmin || isTechnician;
           const canDelete = isOwner || staffModerator;
           const isEditing = editingId === comment.id;

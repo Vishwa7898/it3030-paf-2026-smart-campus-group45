@@ -10,7 +10,9 @@ function roleNamesFromUser(user) {
   if (!user?.roles) return [];
   const raw = user.roles;
   const arr = Array.isArray(raw) ? raw : [];
-  return arr.map((r) => (typeof r === 'string' ? r : r?.name ?? String(r)));
+  return arr
+    .map((r) => (typeof r === 'string' ? r : r?.name ?? String(r)))
+    .map((n) => String(n).replace(/^ROLE_/, '').toUpperCase());
 }
 
 function primaryRoleFromNames(names) {
@@ -20,7 +22,8 @@ function primaryRoleFromNames(names) {
   return '';
 }
 
-function toCompatStoredUser(user) {
+function normalizeSessionUser(user) {
+  if (!user) return null;
   const names = roleNamesFromUser(user);
   const role = primaryRoleFromNames(names);
   const id =
@@ -29,11 +32,24 @@ function toCompatStoredUser(user) {
     user?.studentId ||
     user?.email ||
     '';
+  const displayName = user?.displayName || user?.name || user?.email || id;
+  return {
+    ...user,
+    id,
+    role,
+    displayName,
+  };
+}
+
+function toCompatStoredUser(user) {
+  const normalized = normalizeSessionUser(user);
+  if (!normalized) return null;
+  const { id, role, displayName } = normalized;
   if (!id || !role) return null;
   return {
     id,
     role,
-    displayName: user?.displayName || user?.name || user?.email || id,
+    displayName,
   };
 }
 
@@ -43,9 +59,9 @@ export function AuthProvider({ children }) {
   const [error, setError] = useState('');
 
   const roleNames = useMemo(() => roleNamesFromUser(user), [user]);
-  const isAdmin = roleNames.includes('ADMIN');
-  const isStudent = roleNames.includes('USER') && !isAdmin;
-  const isTechnician = roleNames.includes('TECHNICIAN');
+  const isAdmin = user?.role === 'ADMIN' || roleNames.includes('ADMIN');
+  const isStudent = user?.role === 'USER' || (roleNames.includes('USER') && !isAdmin);
+  const isTechnician = user?.role === 'TECHNICIAN' || roleNames.includes('TECHNICIAN');
 
   async function fetchJson(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, {
@@ -72,8 +88,9 @@ export function AuthProvider({ children }) {
     setError('');
     try {
       const me = await fetchJson('/api/auth/me');
-      setUser(me);
-      writeStoredUser(toCompatStoredUser(me));
+      const normalized = normalizeSessionUser(me);
+      setUser(normalized);
+      writeStoredUser(toCompatStoredUser(normalized));
     } catch {
       setUser(null);
       writeStoredUser(null);

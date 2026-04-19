@@ -33,31 +33,31 @@ export default function Layout() {
         <div className="mx-auto max-w-7xl rounded-3xl border border-indigo-200/20 bg-slate-900/80 backdrop-blur-md shadow-xl overflow-hidden">
           <div className="h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500" />
           
-          <div className="flex items-center justify-between px-6 py-4">
+          <div className="flex items-center justify-between px-8 py-6">
             {/* Brand & Title */}
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="bg-indigo-600 p-2 rounded-xl group-hover:bg-indigo-500 transition-colors">
-                  <Home className="text-white" size={20} />
+                <div className="bg-indigo-600 p-2.5 rounded-xl group-hover:bg-indigo-500 transition-colors">
+                  <Home className="text-white" size={28} />
                 </div>
-                <h1 className="text-xl font-bold text-white hidden sm:block">SmartCampus</h1>
+                <h1 className="text-3xl font-extrabold text-white hidden sm:block">SmartCampus</h1>
               </Link>
-              <div className="h-6 w-[1px] bg-slate-700 hidden md:block" />
-              <h2 className="text-lg font-semibold text-indigo-300 truncate max-w-[200px] sm:max-w-none">
+              <div className="h-8 w-[1px] bg-slate-700 hidden md:block" />
+              <h2 className="text-xl font-semibold text-indigo-300 truncate max-w-[200px] sm:max-w-none">
                 {pageTitle()}
               </h2>
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:flex items-center gap-2">
-              <Link to="/facilities" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/facilities') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+            <nav className="hidden lg:flex items-center gap-3">
+              <Link to="/facilities" className={`px-5 py-2.5 rounded-xl text-base font-medium transition-all ${isActive('/facilities') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Facilities
               </Link>
-              <Link to="/tickets" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/tickets') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+              <Link to="/tickets" className={`px-5 py-2.5 rounded-xl text-base font-medium transition-all ${isActive('/tickets') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Tickets
               </Link>
               {isAdmin && (
-                <Link to="/admin" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/admin') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+                <Link to="/admin" className={`px-5 py-2.5 rounded-xl text-base font-medium transition-all ${isActive('/admin') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                   Admin
                 </Link>
               )}
@@ -66,21 +66,23 @@ export default function Layout() {
             {/* Actions */}
             <div className="flex items-center gap-3">
               {/* Notification Bell */}
-              <Link to="/notifications" className="relative p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors">
-                <Bell size={20} className={unreadCount > 0 ? 'animate-bounce text-amber-400' : ''} />
+              <Link to="/notifications" className="relative p-3 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors">
+                <Bell size={24} className={unreadCount > 0 ? 'animate-bounce text-amber-400' : ''} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-rose-500 ring-2 ring-slate-900" />
+                  <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-slate-900" />
                 )}
               </Link>
 
               {/* User Info & Logout (Desktop) */}
-              <div className="hidden sm:flex items-center gap-3 pl-3 border-l border-slate-700">
+              <div className="hidden sm:flex items-center gap-4 pl-4 border-l border-slate-700">
                 <div className="text-right">
-                  <p className="text-sm font-bold text-white leading-none">{user?.name || 'User'}</p>
-                  <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">{user?.roles?.[0] || 'Member'}</p>
+                  <p className="text-base font-bold text-white leading-none">{user?.name || 'User'}</p>
+                  <p className="text-xs text-slate-400 uppercase tracking-wider mt-1.5">
+                    {user?.roles?.[0] || 'Member'}
+                  </p>
                 </div>
-                <button onClick={handleLogout} className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
-                  <LogOut size={20} />
+                <button onClick={handleLogout} className="p-3 rounded-xl bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+                  <LogOut size={24} />
                 </button>
               </div>
 
