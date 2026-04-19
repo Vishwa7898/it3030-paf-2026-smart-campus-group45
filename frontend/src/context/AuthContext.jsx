@@ -1,13 +1,25 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo } from 'react';
 
 const AuthContext = createContext();
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080';
 
+/** Normalize Spring's Set<Role> JSON (strings or { name }) into role name strings. */
+function roleNamesFromUser(user) {
+  if (!user?.roles) return [];
+  const raw = user.roles;
+  const arr = Array.isArray(raw) ? raw : [];
+  return arr.map((r) => (typeof r === 'string' ? r : r?.name ?? String(r)));
+}
+
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  const roleNames = useMemo(() => roleNamesFromUser(user), [user]);
+  const isAdmin = roleNames.includes('ADMIN');
+  const isStudent = roleNames.includes('USER') && !isAdmin;
 
   async function fetchJson(path, options = {}) {
     const response = await fetch(`${API_BASE}${path}`, {
@@ -20,6 +32,9 @@ export function AuthProvider({ children }) {
     });
 
     if (!response.ok) {
+      if (response.status === 401) {
+        setUser(null);
+      }
       throw new Error(`Request failed: ${response.status}`);
     }
 
@@ -61,7 +76,20 @@ export function AuthProvider({ children }) {
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, logout, fetchJson, checkAuth }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        logout,
+        fetchJson,
+        checkAuth,
+        isAdmin,
+        isStudent,
+        roleNames,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

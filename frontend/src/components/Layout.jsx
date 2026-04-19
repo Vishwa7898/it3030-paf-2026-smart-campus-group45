@@ -1,11 +1,11 @@
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useNotifications } from '../context/NotificationContext';
-import { Bell, User, LogOut, Home, Shield, Ticket, Menu, X } from 'lucide-react';
+import { Bell, LogOut, Home, Ticket, Menu, X } from 'lucide-react';
 import { useState } from 'react';
 
 export default function Layout() {
-  const { user, logout, isStudent } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
   const { unreadCount } = useNotifications();
   const location = useLocation();
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function Layout() {
               <Link to="/tickets" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/tickets') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Tickets
               </Link>
-              {user?.roles?.includes('ADMIN') && (
+              {isAdmin && (
                 <Link to="/admin" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/admin') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                   Admin
                 </Link>
@@ -98,7 +98,7 @@ export default function Layout() {
             <div className="grid grid-cols-2 gap-2">
               <Link to="/facilities" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Facilities</Link>
               <Link to="/tickets" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Tickets</Link>
-              {isStudent && (
+              {user && (
                 <Link to="/tickets/new" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 p-3 rounded-xl bg-indigo-600 text-center font-bold text-white flex items-center justify-center gap-2">
                   <Ticket size={18} /> New Ticket
                 </Link>
