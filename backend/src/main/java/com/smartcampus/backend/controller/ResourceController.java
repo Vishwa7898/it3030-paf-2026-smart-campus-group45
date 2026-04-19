@@ -156,7 +156,7 @@ public class ResourceController {
             @Valid @ModelAttribute Resource resource,
             @RequestPart(value = "file", required = false) MultipartFile file) throws Exception {
         if (file != null && !file.isEmpty()) {
-            String imagePath = fileStorageService.storeFile(file);
+            String imagePath = fileStorageService.storeFile(file, false);
             resource.setImageUrl(imagePath);
         }
 

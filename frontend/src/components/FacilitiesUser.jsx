@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { facilityService, API_BASE_URL } from '../services/facilityService';
+import { catalogImageByType, catalogDefaultImage } from '../facilityCatalogImages';
 import {
   Search,
   Filter,
@@ -107,12 +108,34 @@ const FacilitiesUser = () => {
     return matchesSearch && matchesCapacity;
   });
 
-  const resolveImageUrl = (imageUrl) => {
-    if (!imageUrl) return FALLBACK_IMAGE;
-    if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
-      return imageUrl;
+  /** Absolute URL for API-stored uploads, or null if none. Ensures a leading slash before appending the API host. */
+  const resolveApiImageUrl = (imageUrl) => {
+    if (imageUrl == null) return null;
+    const s = String(imageUrl).trim();
+    if (!s) return null;
+    if (s.startsWith('http://') || s.startsWith('https://')) return s;
+    const path = s.startsWith('/') ? s : `/${s}`;
+    return `${API_BASE_URL}${path}`;
+  };
+
+  const catalogFallbackFor = (facility) =>
+    catalogImageByType[facility.type] || catalogDefaultImage;
+
+  const initialFacilityImageSrc = (facility) =>
+    resolveApiImageUrl(facility.imageUrl) ?? catalogFallbackFor(facility);
+
+  const handleCatalogImageError = (e, facility) => {
+    const el = e.currentTarget;
+    const tier = Number(el.dataset.imgtier || '0') + 1;
+    el.dataset.imgtier = String(tier);
+    if (tier === 1) {
+      el.src = catalogFallbackFor(facility);
+    } else if (tier === 2) {
+      el.referrerPolicy = 'no-referrer';
+      el.src = FALLBACK_IMAGE;
+    } else {
+      el.onerror = null;
     }
-    return `${API_BASE_URL}${imageUrl}`;
   };
 
   const closeDetail = () => {
@@ -270,11 +293,10 @@ const FacilitiesUser = () => {
                     >
                       <div className="relative h-48 overflow-hidden">
                         <img
-                          src={resolveImageUrl(facility.imageUrl)}
+                          key={facility.id}
+                          src={initialFacilityImageSrc(facility)}
                           alt={facility.name}
-                          onError={(e) => {
-                            e.currentTarget.src = FALLBACK_IMAGE;
-                          }}
+                          onError={(e) => handleCatalogImageError(e, facility)}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-slate-900 via-transparent to-transparent opacity-60" />
@@ -403,11 +425,10 @@ const FacilitiesUser = () => {
                   </div>
 
                   <img
-                    src={resolveImageUrl(selectedFacility.imageUrl)}
+                    key={selectedFacility.id}
+                    src={initialFacilityImageSrc(selectedFacility)}
                     alt={selectedFacility.name}
-                    onError={(e) => {
-                      e.currentTarget.src = FALLBACK_IMAGE;
-                    }}
+                    onError={(e) => handleCatalogImageError(e, selectedFacility)}
                     className="w-full h-64 object-cover rounded-2xl border border-slate-700/50 mb-5"
                   />
 

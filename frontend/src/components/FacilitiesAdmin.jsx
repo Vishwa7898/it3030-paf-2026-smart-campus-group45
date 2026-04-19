@@ -19,6 +19,15 @@ const FacilitiesAdmin = () => {
     }
   };
 
+  const resolveUploadedImageUrl = (path) => {
+    if (!path) return null;
+    const s = String(path).trim();
+    if (!s) return null;
+    if (s.startsWith('http://') || s.startsWith('https://')) return s;
+    const p = s.startsWith('/') ? s : `/${s}`;
+    return `${API_BASE_URL}${p}`;
+  };
+
   const [facilities, setFacilities] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -180,7 +189,7 @@ const FacilitiesAdmin = () => {
 
     if (!file) {
       if (editingFacility?.imageUrl) {
-        setImagePreview(`${API_BASE_URL}${editingFacility.imageUrl}`);
+        setImagePreview(resolveUploadedImageUrl(editingFacility.imageUrl));
       } else {
         setImagePreview(null);
       }
@@ -238,7 +247,7 @@ const FacilitiesAdmin = () => {
       amenities: facility.amenities || []
     });
     setSelectedImage(null);
-    setImagePreview(facility.imageUrl ? `${API_BASE_URL}${facility.imageUrl}` : null);
+    setImagePreview(facility.imageUrl ? resolveUploadedImageUrl(facility.imageUrl) : null);
     setFieldErrors({});
     setIsModalOpen(true);
   };
@@ -758,7 +767,7 @@ const FacilitiesAdmin = () => {
                   <p className="text-slate-500 text-xs mt-2 italic">
                     Required: JPG, PNG, or WEBP from your device.
                     {editingFacility
-                      ? ' If you upload a new image while editing, the file must be 25KB or smaller.'
+                      ? ' When editing, you may keep the current image or choose a new file.'
                       : ''}
                   </p>
                   {fieldErrors.image && <p className="text-red-400 text-xs mt-2">{fieldErrors.image}</p>}
