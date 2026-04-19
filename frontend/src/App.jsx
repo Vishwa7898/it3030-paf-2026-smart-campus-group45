@@ -20,6 +20,8 @@ import FacilitiesUser from './components/FacilitiesUser';
 import AdminLayout from './components/AdminLayout';
 import NotificationAdmin from './pages/admin/NotificationAdmin';
 import UserManagement from './pages/admin/UserManagement';
+import BookingRequestPage from './pages/bookings/BookingRequestPage';
+import MyBookingsPage from './pages/bookings/MyBookingsPage';
 
 import './App.css';
 
@@ -54,6 +56,7 @@ function App() {
                 </NavLink>
                 <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
                   <NavLink to="/facilities" className={navLinkClass}>Facilities</NavLink>
+                  <NavLink to="/bookings" className={navLinkClass}>Bookings</NavLink>
                   <NavLink to="/tickets" className={navLinkClass}>Tickets</NavLink>
                   <NavLink to="/admin/facilities" className={navLinkClass}>Management</NavLink>
                 </div>
@@ -88,6 +91,9 @@ function App() {
                 <Route path="tickets" element={<TicketList />} />
                 <Route path="tickets/new" element={<CreateTicket />} />
                 <Route path="tickets/:id" element={<TicketDetails />} />
+
+                <Route path="bookings" element={<MyBookingsPage />} />
+                <Route path="bookings/request/:resourceId" element={<BookingRequestPage />} />
               </Route>
 
               {/* 404 - Redirect to facilities or home */}

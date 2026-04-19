@@ -332,7 +332,7 @@ const FacilitiesUser = () => {
                           {facility.status === 'ACTIVE' ? (
                             <button
                               type="button"
-                              onClick={() => alert('Proceeding to booking...')}
+                              onClick={() => navigate(`/bookings/request/${facility.id}`)}
                               className="w-full py-4 bg-emerald-600/80 hover:bg-emerald-500 border border-emerald-500/50 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all flex items-center justify-center gap-2"
                             >
                               Book now
@@ -452,6 +452,24 @@ const FacilitiesUser = () => {
                       <p className="text-slate-300">{selectedFacility.description}</p>
                     </div>
                   )}
+
+                  <div className="mt-6">
+                    {selectedFacility.status === 'ACTIVE' ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigate(`/bookings/request/${selectedFacility.id}`);
+                        }}
+                        className="w-full py-4 bg-emerald-600/80 hover:bg-emerald-500 border border-emerald-500/50 text-white font-black text-xs uppercase tracking-widest rounded-2xl transition-all"
+                      >
+                        Book now
+                      </button>
+                    ) : (
+                      <p className="text-center text-sm text-slate-500">
+                        Booking is not available while this resource is {selectedFacility.status}.
+                      </p>
+                    )}
+                  </div>
                 </>
               )}
             </motion.div>

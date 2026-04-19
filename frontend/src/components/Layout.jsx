@@ -20,6 +20,8 @@ export default function Layout() {
     if (location.pathname === '/') return 'Campus Dashboard';
     if (location.pathname === '/tickets/new') return 'Report a New Issue';
     if (location.pathname.startsWith('/facilities')) return 'Facilities Catalogue';
+    if (location.pathname.startsWith('/bookings/request')) return 'Request a booking';
+    if (location.pathname.startsWith('/bookings')) return 'My bookings';
     if (location.pathname === '/notifications') return 'Your Notifications';
     return 'Smart Campus';
   };
@@ -52,6 +54,9 @@ export default function Layout() {
             <nav className="hidden lg:flex items-center gap-2">
               <Link to="/facilities" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/facilities') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Facilities
+              </Link>
+              <Link to="/bookings" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${location.pathname.startsWith('/bookings') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+                Bookings
               </Link>
               <Link to="/tickets" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/tickets') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Tickets
@@ -97,6 +102,7 @@ export default function Layout() {
           <div className="lg:hidden mt-2 mx-auto max-w-7xl rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-2xl animate-in slide-in-from-top-4">
             <div className="grid grid-cols-2 gap-2">
               <Link to="/facilities" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Facilities</Link>
+              <Link to="/bookings" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Bookings</Link>
               <Link to="/tickets" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Tickets</Link>
               {user && (
                 <Link to="/tickets/new" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 p-3 rounded-xl bg-indigo-600 text-center font-bold text-white flex items-center justify-center gap-2">
