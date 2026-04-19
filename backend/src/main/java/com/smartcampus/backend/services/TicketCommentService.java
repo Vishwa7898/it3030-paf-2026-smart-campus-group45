@@ -4,7 +4,7 @@ import com.smartcampus.backend.dto.TicketCommentRequest;
 import com.smartcampus.backend.entity.TicketComment;
 import com.smartcampus.backend.exception.ForbiddenException;
 import com.smartcampus.backend.exception.ResourceNotFoundException;
-import com.smartcampus.backend.repository.TicketCommentRepository;
+import com.smartcampus.backend.notification.NotificationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,10 +15,12 @@ public class TicketCommentService {
 
     private final TicketCommentRepository commentRepository;
     private final IncidentTicketService ticketService; // To ensure ticket exists
+    private final NotificationService notificationService;
 
-    public TicketCommentService(TicketCommentRepository commentRepository, IncidentTicketService ticketService) {
+    public TicketCommentService(TicketCommentRepository commentRepository, IncidentTicketService ticketService, NotificationService notificationService) {
         this.commentRepository = commentRepository;
         this.ticketService = ticketService;
+        this.notificationService = notificationService;
     }
 
     public TicketComment addComment(String ticketId, TicketCommentRequest request) {
@@ -34,7 +36,29 @@ public class TicketCommentService {
         comment.setAuthorRole(request.getAuthorRole());
         comment.setContent(request.getContent());
 
-        return commentRepository.save(comment);
+        TicketComment saved = commentRepository.save(comment);
+
+        // Notification Logic
+        String recipientId = null;
+        if ("USER".equalsIgnoreCase(request.getAuthorRole())) {
+            // Student commented -> notify assignee
+            if (ticket.getAssigneeId() != null && !ticket.getAssigneeId().isBlank()) {
+                recipientId = ticket.getAssigneeId();
+            }
+        } else {
+            // Staff commented -> notify submitter
+            recipientId = ticket.getSubmitterId();
+        }
+
+        if (recipientId != null && !recipientId.equals(request.getAuthorId())) {
+            String title = "New Comment on Ticket #" + ticketId.substring(0, Math.min(8, ticketId.length()));
+            String message = request.getAuthorId() + " added a comment: " +
+                             (request.getContent().length() > 50 ? request.getContent().substring(0, 50) + "..." : request.getContent());
+            String actionUrl = "/tickets/" + ticketId;
+            notificationService.create(recipientId, title, message, "COMMENT", actionUrl);
+        }
+
+        return saved;
     }
 
     public List<TicketComment> getCommentsByTicketId(String ticketId) {

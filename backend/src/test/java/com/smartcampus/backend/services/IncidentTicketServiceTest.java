@@ -88,14 +88,14 @@ class IncidentTicketServiceTest {
     }
 
     @Test
-    void assigneeTechnicianCanCloseResolvedTicket() {
+    void technicianCannotCloseResolvedTicket() {
         openTicket.setStatus(TicketStatus.RESOLVED);
         when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
-        when(ticketRepository.save(any())).thenAnswer(inv -> inv.getArgument(0));
 
-        service.updateTicketStatus("t1", TicketStatus.CLOSED, null, "tech1", "TECHNICIAN");
-
-        verify(ticketRepository).save(any());
+        assertThatThrownBy(() ->
+                service.updateTicketStatus("t1", TicketStatus.CLOSED, null, "tech1", "TECHNICIAN"))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessageContaining("admin");
     }
 
     @Test
@@ -158,6 +158,17 @@ class IncidentTicketServiceTest {
 
     @Test
     void deleteOpenTicketBySubmitter() {
+        when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
+
+        service.deleteTicket("t1", "student1", "USER");
+
+        verify(ticketCommentRepository).deleteByTicketId("t1");
+        verify(ticketRepository).delete(openTicket);
+    }
+
+    @Test
+    void deleteRejectedTicketBySubmitter() {
+        openTicket.setStatus(TicketStatus.REJECTED);
         when(ticketRepository.findById("t1")).thenReturn(Optional.of(openTicket));
 
         service.deleteTicket("t1", "student1", "USER");

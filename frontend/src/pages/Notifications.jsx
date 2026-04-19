@@ -48,12 +48,27 @@ export default function Notifications() {
               </div>
             ) : (
               notifications.map((item) => (
-                <div key={item.id} className={`notification-item ${!item.read ? 'unread fade-in' : ''}`}>
+                <div 
+                  key={item.id} 
+                  className={`notification-item ${!item.read ? 'unread fade-in' : ''} ${item.actionUrl ? 'cursor-pointer hover:bg-slate-50 transition-colors' : ''}`}
+                  onClick={(e) => {
+                    // Prevent marking as read twice if clicking the check icon
+                    if (e.target.closest('.mark-read-btn')) return;
+                    
+                    if (!item.read) markRead(item.id);
+                    if (item.actionUrl) window.location.href = item.actionUrl;
+                  }}
+                >
                   <div className="notification-header">
-                    <h3 className="notification-title">{item.title}</h3>
+                    <h3 className="notification-title group-hover:text-indigo-600 transition-colors">
+                      {item.title}
+                    </h3>
                     {!item.read && (
                       <button 
-                        onClick={() => markRead(item.id)} 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          markRead(item.id);
+                        }} 
                         className="btn-icon text-primary mark-read-btn" 
                         title="Mark as read"
                       >

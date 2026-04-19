@@ -12,24 +12,34 @@ function currentUser() {
     return readStoredUser();
 }
 
+function getUserId(u) {
+    if (!u) return '';
+    return u.id || u.userId || u.studentId || u.email || '';
+}
+
 function actorPayload() {
     const u = currentUser();
     return {
-        actorId: u?.id ?? '',
+        actorId: getUserId(u),
         actorRole: u?.role ?? 'USER',
     };
 }
 
 function viewerParams() {
     const u = currentUser();
-    if (!u?.id) return {};
-    return { viewerId: u.id, viewerRole: u.role };
+    const id = getUserId(u);
+    if (!id) return {};
+    return { viewerId: id, viewerRole: u?.role ?? 'USER' };
 }
 
 export const TicketService = {
     getAllTickets: async (options = {}) => {
+        const explicitViewer = {};
+        if (options.viewerRole) explicitViewer.viewerRole = options.viewerRole;
+        if (options.viewerId) explicitViewer.viewerId = options.viewerId;
+
         const params = {
-            ...viewerParams(),
+            ...(Object.keys(explicitViewer).length ? explicitViewer : viewerParams()),
         };
         if (options.status) params.status = options.status;
         if (options.submitterId) params.submitterId = options.submitterId;
@@ -41,8 +51,13 @@ export const TicketService = {
         return response.data;
     },
 
-    getTicketById: async (id) => {
-        const response = await api.get(`/tickets/${id}`, { params: viewerParams() });
+    getTicketById: async (id, options = {}) => {
+        const explicitViewer = {};
+        if (options.viewerRole) explicitViewer.viewerRole = options.viewerRole;
+        if (options.viewerId) explicitViewer.viewerId = options.viewerId;
+        const response = await api.get(`/tickets/${id}`, {
+            params: Object.keys(explicitViewer).length ? explicitViewer : viewerParams(),
+        });
         return response.data;
     },
 

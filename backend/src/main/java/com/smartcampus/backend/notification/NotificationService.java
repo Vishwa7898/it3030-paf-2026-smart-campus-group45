@@ -20,11 +20,16 @@ public class NotificationService {
     }
 
     public Notification create(String email, String title, String message, String category) {
+        return create(email, title, message, category, null);
+    }
+
+    public Notification create(String email, String title, String message, String category, String actionUrl) {
         Notification notification = new Notification();
         notification.setRecipientEmail(email);
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setCategory(category);
+        notification.setActionUrl(actionUrl);
         notification.setRead(false);
         notification.setCreatedAt(Instant.now());
         return notificationRepository.save(notification);
