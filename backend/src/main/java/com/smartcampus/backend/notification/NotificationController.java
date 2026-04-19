@@ -52,18 +52,19 @@ public class NotificationController {
 
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Notification> createAdminNotification(@Valid @RequestBody CreateNotificationRequest request) {
-        Notification created = notificationService.create(
-            request.recipientEmail(),
-            request.title(),
-            request.message(),
-            request.category()
-        );
-        return ResponseEntity.ok(created);
+    public ResponseEntity<Void> createAdminNotification(@Valid @RequestBody CreateNotificationRequest request) {
+        if (request.recipientEmails() == null || request.recipientEmails().isEmpty()) {
+            notificationService.create("", request.title(), request.message(), request.category());
+        } else {
+            for (String email : request.recipientEmails()) {
+                notificationService.create(email, request.title(), request.message(), request.category());
+            }
+        }
+        return ResponseEntity.ok().build();
     }
 
     public record CreateNotificationRequest(
-        @Email @NotBlank String recipientEmail,
+        List<String> recipientEmails,
         @NotBlank String title,
         @NotBlank String message,
         @NotBlank String category

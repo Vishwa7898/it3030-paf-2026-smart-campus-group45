@@ -17,6 +17,9 @@ import CreateTicket from './pages/tickets/CreateTicket';
 import TicketDetails from './pages/tickets/TicketDetails';
 import FacilitiesAdmin from './components/FacilitiesAdmin';
 import FacilitiesUser from './components/FacilitiesUser';
+import AdminLayout from './components/AdminLayout';
+import NotificationAdmin from './pages/admin/NotificationAdmin';
+import UserManagement from './pages/admin/UserManagement';
 
 import './App.css';
 
@@ -65,12 +68,21 @@ function App() {
               <Route element={<ProtectedLayout />}>
                 <Route index element={<Home />} />
                 <Route path="notifications" element={<Notifications />} />
-                <Route path="admin" element={<AdminDashboard />} />
                 
+                {/* Admin Nested Routes */}
+                <Route path="admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="notifications" element={<NotificationAdmin />} />
+                  <Route path="users" element={<UserManagement />} />
+                  <Route path="facilities" element={<FacilitiesAdmin />} />
+                  {/* Placeholders for team members to link later */}
+                  <Route path="tickets" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Tickets Management (Pending Implementation)</div>} />
+                  <Route path="bookings" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Bookings Management (Pending Implementation)</div>} />
+                </Route>
+
                 {/* Facilities Section */}
                 <Route path="facilities" element={<FacilitiesUser />} />
                 <Route path="facilities/:id" element={<FacilitiesUser />} />
-                <Route path="admin/facilities" element={<FacilitiesAdmin />} />
 
                 {/* Ticketing Section */}
                 <Route path="tickets" element={<TicketList />} />
