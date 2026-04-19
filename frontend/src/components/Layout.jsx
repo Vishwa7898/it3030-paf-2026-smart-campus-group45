@@ -21,10 +21,16 @@ export default function Layout() {
     if (location.pathname === '/tickets/new') return 'Report a New Issue';
     if (location.pathname.startsWith('/facilities')) return 'Facilities Catalogue';
     if (location.pathname === '/notifications') return 'Your Notifications';
+    if (location.pathname === '/bookings') return 'My Bookings';
+    if (location.pathname === '/bookings/new') return 'New Booking';
+    if (location.pathname.startsWith('/admin/bookings')) return 'Booking Management';
     return 'Smart Campus';
   };
 
   const isActive = (path) => location.pathname === path;
+  const isBookingUser =
+    location.pathname === '/bookings' || location.pathname === '/bookings/new';
+  const isBookingAdmin = location.pathname.startsWith('/admin/bookings');
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-200">
@@ -53,6 +59,14 @@ export default function Layout() {
               <Link to="/facilities" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/facilities') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Facilities
               </Link>
+              <Link to="/bookings" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isBookingUser ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+                My bookings
+              </Link>
+              {isAdmin && (
+                <Link to="/admin/bookings" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isBookingAdmin ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+                  Booking management
+                </Link>
+              )}
               <Link to="/tickets" className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${isActive('/tickets') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
                 Tickets
               </Link>
@@ -97,6 +111,10 @@ export default function Layout() {
           <div className="lg:hidden mt-2 mx-auto max-w-7xl rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-2xl animate-in slide-in-from-top-4">
             <div className="grid grid-cols-2 gap-2">
               <Link to="/facilities" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Facilities</Link>
+              <Link to="/bookings" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">My bookings</Link>
+              {isAdmin && (
+                <Link to="/admin/bookings" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Booking management</Link>
+              )}
               <Link to="/tickets" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Tickets</Link>
               {user && (
                 <Link to="/tickets/new" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 p-3 rounded-xl bg-indigo-600 text-center font-bold text-white flex items-center justify-center gap-2">

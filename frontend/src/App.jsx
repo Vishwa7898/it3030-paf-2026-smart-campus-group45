@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, NavLink, Outlet } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext'; // path එක ඔබ දැනට පාවිච්චි කරන එකට වෙනස් කරගන්න
+import { AuthProvider, useAuth } from './context/AuthContext'; // path එක ඔබ දැනට පාවිච්චි කරන එකට වෙනස් කරගන්න
 import { NotificationProvider } from './context/NotificationContext';
 
 // Auth Components
@@ -17,6 +17,9 @@ import CreateTicket from './pages/tickets/CreateTicket';
 import TicketDetails from './pages/tickets/TicketDetails';
 import FacilitiesAdmin from './components/FacilitiesAdmin';
 import FacilitiesUser from './components/FacilitiesUser';
+import MyBookingsPage from './booking/MyBookingsPage';
+import CreateBookingPage from './booking/CreateBookingPage';
+import AdminBookingsPage from './booking/AdminBookingsPage';
 
 import './App.css';
 
@@ -37,6 +40,23 @@ function ProtectedLayout() {
   );
 }
 
+/** Module B — booking links (user vs admin). */
+function BookingNavLinks() {
+  const { isAdmin } = useAuth();
+  return (
+    <>
+      <NavLink to="/bookings" className={navLinkClass}>
+        My bookings
+      </NavLink>
+      {isAdmin && (
+        <NavLink to="/admin/bookings" className={navLinkClass}>
+          Booking management
+        </NavLink>
+      )}
+    </>
+  );
+}
+
 function App() {
   return (
     <AuthProvider>
@@ -51,6 +71,7 @@ function App() {
                 </NavLink>
                 <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
                   <NavLink to="/facilities" className={navLinkClass}>Facilities</NavLink>
+                  <BookingNavLinks />
                   <NavLink to="/tickets" className={navLinkClass}>Tickets</NavLink>
                   <NavLink to="/admin/facilities" className={navLinkClass}>Management</NavLink>
                 </div>
@@ -71,6 +92,11 @@ function App() {
                 <Route path="facilities" element={<FacilitiesUser />} />
                 <Route path="facilities/:id" element={<FacilitiesUser />} />
                 <Route path="admin/facilities" element={<FacilitiesAdmin />} />
+
+                {/* Module B — Booking Management */}
+                <Route path="bookings" element={<MyBookingsPage />} />
+                <Route path="bookings/new" element={<CreateBookingPage />} />
+                <Route path="admin/bookings" element={<AdminBookingsPage />} />
 
                 {/* Ticketing Section */}
                 <Route path="tickets" element={<TicketList />} />
