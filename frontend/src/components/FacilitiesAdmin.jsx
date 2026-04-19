@@ -54,6 +54,14 @@ const FacilitiesAdmin = () => {
   const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'UNDER_REPAIR', 'DECOMMISSIONED', 'RESERVED', 'INACTIVE'];
   const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
 
+  const inferImageMimeFromFileName = (file) => {
+    const name = (file?.name || '').toLowerCase();
+    if (name.endsWith('.webp')) return 'image/webp';
+    if (name.endsWith('.png')) return 'image/png';
+    if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+    return file?.type || '';
+  };
+
   const isCapacityRequired = useMemo(
     () => ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'SEMINAR_ROOM', 'AUDITORIUM', 'SPORTS_FACILITY'].includes(formData.type),
     [formData.type]
@@ -155,7 +163,8 @@ const FacilitiesAdmin = () => {
     if (!selectedImage && !hasStoredImage) {
       errors.image = 'Resource image is required';
     } else if (selectedImage) {
-      if (!allowedImageTypes.includes(selectedImage.type)) {
+      const effectiveType = selectedImage.type || inferImageMimeFromFileName(selectedImage);
+      if (!allowedImageTypes.includes(effectiveType)) {
         errors.image = 'File type not supported. Allowed: JPG, PNG, WEBP';
       }
     }
