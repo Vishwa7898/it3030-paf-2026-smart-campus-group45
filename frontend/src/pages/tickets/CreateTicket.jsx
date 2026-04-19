@@ -144,12 +144,12 @@ const CreateTicket = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-semibold text-black">Resource ID / Name *</label>
+              <label className="text-sm font-semibold text-black">Student Name *</label>
               <input
                 type="text"
                 name="resourceId"
                 required
-                placeholder="e.g. Projector-01"
+                placeholder="e.g. John Doe"
                 value={formData.resourceId}
                 onChange={handleInputChange}
                 className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-black placeholder:text-slate-500 focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-colors"

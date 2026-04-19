@@ -404,14 +404,14 @@ const TicketDetails = () => {
                         Assign technician
                       </label>
                       <p className="text-[11px] text-slate-400 mb-2">
-                        Demo technician id: <code className="bg-slate-100 px-1 rounded">tech-jamith</code>
+                        Technician Google email: <code className="bg-slate-100 px-1 rounded">techjamith@gmail.com</code>
                       </p>
                       <div className="flex gap-2">
                         <input
                           type="text"
                           value={assigneeId}
                           onChange={(e) => setAssigneeId(e.target.value)}
-                          placeholder="Technician user id"
+                          placeholder="Technician email"
                           className="flex-1 p-2 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-sm"
                         />
                         <button
