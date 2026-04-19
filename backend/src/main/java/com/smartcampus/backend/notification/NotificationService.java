@@ -54,4 +54,24 @@ public class NotificationService {
         }
         return updatedCount;
     }
+
+    public List<Notification> getAllNotifications() {
+        return notificationRepository.findAllByOrderByCreatedAtDesc();
+    }
+
+    public Notification updateNotification(String id, String title, String message, String category) {
+        Notification notification = notificationRepository.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
+        notification.setTitle(title);
+        notification.setMessage(message);
+        notification.setCategory(category);
+        return notificationRepository.save(notification);
+    }
+
+    public void deleteNotification(String id) {
+        if (!notificationRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found");
+        }
+        notificationRepository.deleteById(id);
+    }
 }

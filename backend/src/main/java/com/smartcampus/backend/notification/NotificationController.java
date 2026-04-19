@@ -50,20 +50,50 @@ public class NotificationController {
         return ResponseEntity.ok(new MarkAllResponse(count));
     }
 
+    @GetMapping("/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public List<Notification> getAllAdminNotifications() {
+        return notificationService.getAllNotifications();
+    }
+
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Notification> createAdminNotification(@Valid @RequestBody CreateNotificationRequest request) {
-        Notification created = notificationService.create(
-            request.recipientEmail(),
-            request.title(),
-            request.message(),
-            request.category()
-        );
-        return ResponseEntity.ok(created);
+    public ResponseEntity<java.util.Map<String, String>> createAdminNotification(@Valid @RequestBody CreateNotificationRequest request) {
+        if (request.recipientEmails() == null || request.recipientEmails().isEmpty()) {
+            notificationService.create("", request.title(), request.message(), request.category());
+        } else {
+            for (String email : request.recipientEmails()) {
+                notificationService.create(email, request.title(), request.message(), request.category());
+            }
+        }
+        return ResponseEntity.ok(java.util.Map.of("status", "success"));
+    }
+
+    @org.springframework.web.bind.annotation.PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public Notification updateAdminNotification(
+        @PathVariable String id,
+        @Valid @RequestBody UpdateNotificationRequest request
+    ) {
+        return notificationService.updateNotification(id, request.title(), request.message(), request.category());
+    }
+
+    @org.springframework.web.bind.annotation.DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteAdminNotification(@PathVariable String id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.noContent().build();
     }
 
     public record CreateNotificationRequest(
-        @Email @NotBlank String recipientEmail,
+        List<String> recipientEmails,
+        @NotBlank String title,
+        @NotBlank String message,
+        @NotBlank String category
+    ) {
+    }
+
+    public record UpdateNotificationRequest(
         @NotBlank String title,
         @NotBlank String message,
         @NotBlank String category

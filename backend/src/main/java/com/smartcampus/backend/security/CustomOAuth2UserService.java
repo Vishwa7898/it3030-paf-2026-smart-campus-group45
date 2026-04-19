@@ -40,12 +40,17 @@ public class CustomOAuth2UserService implements OAuth2UserService<OAuth2UserRequ
         String name = oauth2User.getAttribute("name");
         String provider = userRequest.getClientRegistration().getRegistrationId();
 
-        Role role = adminEmails.contains(email) ? Role.ADMIN : Role.USER;
+        // The role will be set dynamically below
         AppUser user = appUserRepository.findByEmail(email).orElseGet(AppUser::new);
         user.setEmail(email);
         user.setName(name);
         user.setProvider(provider);
-        user.setRoles(Set.of(role));
+        
+        // Only set default roles if the user has no roles, OR force ADMIN if they are in the admin-emails list
+        if (user.getRoles() == null || user.getRoles().isEmpty() || adminEmails.contains(email)) {
+            Role role = adminEmails.contains(email) ? Role.ADMIN : Role.USER;
+            user.setRoles(Set.of(role));
+        }
         appUserRepository.save(user);
 
         return new AppPrincipal(oauth2User, user.getRoles());

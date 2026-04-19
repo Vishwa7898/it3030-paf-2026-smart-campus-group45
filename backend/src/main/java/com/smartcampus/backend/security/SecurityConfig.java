@@ -53,6 +53,7 @@ public class SecurityConfig {
                 .requestMatchers("/", "/error", "/login/**", "/oauth2/**", "/uploads/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                 .requestMatchers("/api/test-db").hasRole("ADMIN")
+                .requestMatchers("/api/users/**").hasRole("ADMIN")
                 .anyRequest().authenticated()
             )
             .oauth2Login(oauth -> oauth
