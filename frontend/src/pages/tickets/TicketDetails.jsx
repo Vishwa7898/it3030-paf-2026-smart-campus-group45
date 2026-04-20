@@ -195,9 +195,9 @@ const TicketDetails = () => {
                 </p>
               </div>
               <div className={`px-4 py-1.5 border rounded-lg text-sm font-bold ${ticket.priority === 'CRITICAL' ? 'bg-red-50 border-red-200 text-red-700' :
-                  ticket.priority === 'HIGH' ? 'bg-orange-50 border-orange-200 text-orange-700' :
-                    ticket.priority === 'MEDIUM' ? 'bg-blue-50 border-blue-200 text-blue-700' :
-                      'bg-slate-50 border-slate-200 text-slate-700'
+                ticket.priority === 'HIGH' ? 'bg-orange-50 border-orange-200 text-orange-700' :
+                  ticket.priority === 'MEDIUM' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                    'bg-slate-50 border-slate-200 text-slate-700'
                 }`}>
                 {ticket.priority} PRIORITY
               </div>
