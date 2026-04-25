@@ -29,35 +29,35 @@ export default function Layout() {
   return (
     <div className="min-h-screen bg-[#0f172a] text-slate-200">
       {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 shrink-0 p-4">
-        <div className="mx-auto max-w-7xl rounded-3xl border border-indigo-200/20 bg-slate-900/80 backdrop-blur-md shadow-xl overflow-hidden">
+      <header className="sticky top-0 z-50 shrink-0">
+        <div className="w-full border border-slate-200 bg-white/90 backdrop-blur-md shadow-xl overflow-hidden">
           <div className="h-[4px] bg-gradient-to-r from-indigo-500 via-purple-500 to-fuchsia-500" />
           
           <div className="flex items-center justify-between px-8 py-6">
             {/* Brand & Title */}
             <div className="flex items-center gap-4">
               <Link to="/" className="flex items-center gap-2 group">
-                <div className="bg-indigo-600 p-2.5 rounded-xl group-hover:bg-indigo-500 transition-colors">
+                <div className="bg-indigo-500 p-2.5 rounded-xl group-hover:bg-indigo-400 transition-colors">
                   <Home className="text-white" size={28} />
                 </div>
-                <h1 className="text-3xl font-extrabold text-white hidden sm:block">SmartCampus</h1>
+                <h1 className="text-4xl font-extrabold text-slate-900 hidden sm:block">SmartCampus</h1>
               </Link>
-              <div className="h-8 w-[1px] bg-slate-700 hidden md:block" />
-              <h2 className="text-xl font-semibold text-indigo-300 truncate max-w-[200px] sm:max-w-none">
+              <div className="h-8 w-[1px] bg-slate-300 hidden md:block" />
+              <h2 className="text-2xl font-semibold text-indigo-700 truncate max-w-[200px] sm:max-w-none">
                 {pageTitle()}
               </h2>
             </div>
 
             {/* Desktop Navigation */}
             <nav className="hidden lg:flex items-center gap-3">
-              <Link to="/facilities" className={`px-5 py-2.5 rounded-xl text-base font-medium transition-all ${isActive('/facilities') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+              <Link to="/facilities" className={`px-5 py-2.5 rounded-xl text-lg font-semibold transition-all ${isActive('/facilities') ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
                 Facilities
               </Link>
-              <Link to="/tickets" className={`px-5 py-2.5 rounded-xl text-base font-medium transition-all ${isActive('/tickets') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+              <Link to="/tickets" className={`px-5 py-2.5 rounded-xl text-lg font-semibold transition-all ${isActive('/tickets') ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
                 Tickets
               </Link>
               {isAdmin && (
-                <Link to="/admin" className={`px-5 py-2.5 rounded-xl text-base font-medium transition-all ${isActive('/admin') ? 'bg-indigo-600 text-white' : 'hover:bg-slate-800'}`}>
+                <Link to="/admin" className={`px-5 py-2.5 rounded-xl text-lg font-semibold transition-all ${isActive('/admin') ? 'bg-indigo-500 text-white' : 'text-slate-700 hover:bg-slate-100'}`}>
                   Admin
                 </Link>
               )}
@@ -66,18 +66,18 @@ export default function Layout() {
             {/* Actions */}
             <div className="flex items-center gap-3">
               {/* Notification Bell */}
-              <Link to="/notifications" className="relative p-3 rounded-xl bg-slate-800 hover:bg-slate-700 transition-colors">
+              <Link to="/notifications" className="relative p-3 rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
                 <Bell size={24} className={unreadCount > 0 ? 'animate-bounce text-amber-400' : ''} />
                 {unreadCount > 0 && (
-                  <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-slate-900" />
+                  <span className="absolute top-2.5 right-2.5 w-2.5 h-2.5 rounded-full bg-rose-500 ring-2 ring-white" />
                 )}
               </Link>
 
               {/* User Info & Logout (Desktop) */}
-              <div className="hidden sm:flex items-center gap-4 pl-4 border-l border-slate-700">
+              <div className="hidden sm:flex items-center gap-4 pl-4 border-l border-slate-300">
                 <div className="text-right">
-                  <p className="text-base font-bold text-white leading-none">{user?.name || 'User'}</p>
-                  <p className="text-xs text-slate-400 uppercase tracking-wider mt-1.5">
+                  <p className="text-lg font-bold text-slate-900 leading-none">{user?.name || 'User'}</p>
+                  <p className="text-sm text-slate-500 uppercase tracking-wider mt-1.5">
                     {user?.roles?.[0] || 'Member'}
                   </p>
                 </div>
@@ -87,7 +87,7 @@ export default function Layout() {
               </div>
 
               {/* Mobile Menu Toggle */}
-              <button className="lg:hidden p-2 rounded-xl bg-slate-800" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+              <button className="lg:hidden p-2 rounded-xl bg-slate-100 text-slate-800" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
                 {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
               </button>
             </div>
@@ -96,16 +96,16 @@ export default function Layout() {
 
         {/* Mobile Menu Dropdown */}
         {isMobileMenuOpen && (
-          <div className="lg:hidden mt-2 mx-auto max-w-7xl rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-2xl animate-in slide-in-from-top-4">
+          <div className="lg:hidden mt-2 w-full border border-slate-200 bg-white p-4 shadow-2xl animate-in slide-in-from-top-4">
             <div className="grid grid-cols-2 gap-2">
-              <Link to="/facilities" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Facilities</Link>
-              <Link to="/tickets" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-800 text-center font-medium">Tickets</Link>
+              <Link to="/facilities" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-100 text-slate-700 text-center text-lg font-semibold">Facilities</Link>
+              <Link to="/tickets" onClick={() => setIsMobileMenuOpen(false)} className="p-3 rounded-xl bg-slate-100 text-slate-700 text-center text-lg font-semibold">Tickets</Link>
               {user && (
-                <Link to="/tickets/new" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 p-3 rounded-xl bg-indigo-600 text-center font-bold text-white flex items-center justify-center gap-2">
+                <Link to="/tickets/new" onClick={() => setIsMobileMenuOpen(false)} className="col-span-2 p-3 rounded-xl bg-indigo-500 text-center text-lg font-bold text-white flex items-center justify-center gap-2">
                   <Ticket size={18} /> New Ticket
                 </Link>
               )}
-              <button onClick={handleLogout} className="col-span-2 p-3 rounded-xl bg-rose-500/20 text-rose-500 font-bold">Logout</button>
+              <button onClick={handleLogout} className="col-span-2 p-3 rounded-xl bg-rose-500/20 text-rose-600 text-lg font-bold">Logout</button>
             </div>
           </div>
         )}
