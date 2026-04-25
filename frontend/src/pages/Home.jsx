@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { ArrowRight, ShieldCheck, BellRing, Users } from 'lucide-react';
+import image4 from '../assets/image4.jpg';
+import studentDining from '../assets/student_dining.jpg';
 
 export default function Home() {
   const { user } = useAuth();
@@ -9,6 +11,27 @@ export default function Home() {
     <div className="fade-in">
       <section className="hero-section">
         <h1 className="hero-title">Welcome to Smart Campus</h1>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+            gap: '1.25rem',
+            width: '100%',
+            maxWidth: '860px',
+            margin: '1.5rem auto 1rem',
+          }}
+        >
+          <img
+            src={image4}
+            alt="Smart campus environment"
+            className="w-full h-56 object-cover rounded-3xl shadow-xl border border-slate-700/40"
+          />
+          <img
+            src={studentDining}
+            alt="Students in dining area"
+            className="w-full h-56 object-cover rounded-3xl shadow-xl border border-slate-700/40"
+          />
+        </div>
         <p className="hero-subtitle">
           Experience a unified, modern, and intelligent campus management system designed for seamless connectivity.
         </p>
