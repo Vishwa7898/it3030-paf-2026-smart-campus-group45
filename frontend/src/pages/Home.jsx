@@ -32,26 +32,11 @@ export default function Home() {
             className="w-full h-56 object-cover rounded-3xl shadow-xl border border-slate-700/40"
           />
         </div>
-        <p className="hero-subtitle">
-          Experience a unified, modern, and intelligent campus management system designed for seamless connectivity.
+        <p className="hero-subtitle" style={{ fontSize: '28px' }}>
+          "Revolutionizing campus management with intelligent automation and seamless user experiences."
         </p>
         
-        {!user ? (
-          <Link to="/login" className="btn-primary" style={{ padding: '1rem 2rem', fontSize: '1.125rem' }}>
-            Get Started <ArrowRight size={20} />
-          </Link>
-        ) : (
-          <div style={{ display: 'flex', gap: '1rem' }}>
-            <Link to="/notifications" className="btn-primary">
-              View Notifications
-            </Link>
-            {user.roles.includes('ADMIN') && (
-              <Link to="/admin" className="btn-secondary">
-                Admin Dashboard
-              </Link>
-            )}
-          </div>
-        )}
+
       </section>
 
       <section
@@ -119,6 +104,60 @@ export default function Home() {
           </p>
         </div>
       </section>
+      <footer
+  style={{
+    marginTop: '3rem',
+    background: '#0f172a',
+    color: '#e2e8f0',
+    padding: '2rem 1rem',
+    borderTop: '1px solid #1e293b',
+  }}
+>
+  <div
+    style={{
+      maxWidth: '1100px',
+      margin: 'auto',
+      display: 'grid',
+      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
+      gap: '1.5rem',
+    }}
+  >
+    {/* About */}
+    <div>
+      <h3 style={{ marginBottom: '0.5rem' }}>Smart Campus</h3>
+      <p style={{ fontSize: '19px', lineHeight: '1.5' }}>
+        A modern campus management system designed to simplify student, staff, and admin operations.
+      </p>
+    </div>
+
+    {/* Contact */}
+    <div>
+      <h3 style={{ marginBottom: '1.5rem' }}>Contact Us</h3>
+      <p>Email: smartcampus@gmail.com</p>
+      <p>Phone: +94 77 123 4567</p>
+    </div>
+
+    {/* Location */}
+    <div>
+      <h3 style={{ marginBottom: '1.5rem' }}>Location</h3>
+      <p>SLIIT,Campus</p>
+      <p>Malabe,</p>
+      <p>Kaduwela Road, Sri Lanka</p>
+    </div>
+  </div>
+
+  {/* Bottom line */}
+  <div
+    style={{
+      textAlign: 'center',
+      marginTop: '1.5rem',
+      fontSize: '13px',
+      color: '#5f7594',
+    }}
+  >
+    
+  </div>
+</footer>
     </div>
   );
 }
