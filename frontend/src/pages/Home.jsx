@@ -31,29 +31,69 @@ export default function Home() {
         )}
       </section>
 
-      <section style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem', marginTop: '2rem' }}>
-        <div className="card text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '50%', color: 'var(--primary)', marginBottom: '1rem' }}>
+      <section
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '2rem',
+          marginTop: '2rem',
+        }}
+      >
+        <div
+          className="text-center rounded-3xl p-8 shadow-lg transition-transform duration-300 hover:-translate-y-1"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+          }}
+        >
+          <div style={{ background: '#dbeafe', padding: '1rem', borderRadius: '50%', color: '#1d4ed8', marginBottom: '1rem' }}>
             <BellRing size={32} />
           </div>
-          <h3>Real-time Notifications</h3>
-          <p>Stay updated with instant alerts on your bookings, tickets, and important campus announcements.</p>
+          <h3 className="text-slate-900 text-2xl font-bold mb-3">Real-time Notifications</h3>
+          <p className="text-slate-700 text-base leading-relaxed">
+            Stay updated with instant alerts on your bookings, tickets, and important campus announcements.
+          </p>
         </div>
         
-        <div className="card text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '50%', color: 'var(--primary)', marginBottom: '1rem' }}>
+        <div
+          className="text-center rounded-3xl p-8 shadow-lg transition-transform duration-300 hover:-translate-y-1"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+          }}
+        >
+          <div style={{ background: '#dcfce7', padding: '1rem', borderRadius: '50%', color: '#15803d', marginBottom: '1rem' }}>
             <ShieldCheck size={32} />
           </div>
-          <h3>Secure Authorization</h3>
-          <p>Role-based access control ensuring that your data remains safe and accessible only to authorized personnel.</p>
+          <h3 className="text-slate-900 text-2xl font-bold mb-3">Secure Authorization</h3>
+          <p className="text-slate-700 text-base leading-relaxed">
+            Role-based access control ensuring that your data remains safe and accessible only to authorized personnel.
+          </p>
         </div>
 
-        <div className="card text-center" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-          <div style={{ background: 'var(--primary-light)', padding: '1rem', borderRadius: '50%', color: 'var(--primary)', marginBottom: '1rem' }}>
+        <div
+          className="text-center rounded-3xl p-8 shadow-lg transition-transform duration-300 hover:-translate-y-1"
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: '#fff7ed',
+            border: '1px solid #fed7aa',
+          }}
+        >
+          <div style={{ background: '#ffedd5', padding: '1rem', borderRadius: '50%', color: '#c2410c', marginBottom: '1rem' }}>
             <Users size={32} />
           </div>
-          <h3>Collaborative Platform</h3>
-          <p>Built for students, staff, and admins to interact smoothly within a single unified dashboard.</p>
+          <h3 className="text-slate-900 text-2xl font-bold mb-3">Collaborative Platform</h3>
+          <p className="text-slate-700 text-base leading-relaxed">
+            Built for students, staff, and admins to interact smoothly within a single unified dashboard.
+          </p>
         </div>
       </section>
     </div>
