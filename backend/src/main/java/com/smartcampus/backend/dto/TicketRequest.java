@@ -12,11 +12,11 @@ import java.util.List;
 @Data
 public class TicketRequest {
 
-    /** Optional; defaults to a placeholder when omitted. */
+    @NotBlank
     @Size(max = 200)
     private String resourceId;
 
-    /** Optional; defaults to a placeholder when omitted. */
+    @NotBlank
     @Size(max = 200)
     private String location;
 

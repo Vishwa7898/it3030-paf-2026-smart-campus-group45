@@ -29,13 +29,13 @@ public class NotificationController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'TECHNICIAN')")
     public List<Notification> list(@AuthenticationPrincipal AppPrincipal principal) {
         return notificationService.getNotificationsForUser(principal.getEmail());
     }
 
     @PatchMapping("/{id}/read")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'TECHNICIAN')")
     public Notification markAsRead(
         @PathVariable String id,
         @AuthenticationPrincipal AppPrincipal principal
@@ -44,7 +44,7 @@ public class NotificationController {
     }
 
     @PatchMapping("/read-all")
-    @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
+    @PreAuthorize("hasAnyRole('USER', 'ADMIN', 'TECHNICIAN')")
     public ResponseEntity<MarkAllResponse> readAll(@AuthenticationPrincipal AppPrincipal principal) {
         int count = notificationService.markAllAsRead(principal.getEmail());
         return ResponseEntity.ok(new MarkAllResponse(count));

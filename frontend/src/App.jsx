@@ -20,6 +20,9 @@ import FacilitiesUser from './components/FacilitiesUser';
 import AdminLayout from './components/AdminLayout';
 import NotificationAdmin from './pages/admin/NotificationAdmin';
 import UserManagement from './pages/admin/UserManagement';
+import AdminBookings from './pages/admin/AdminBookings';
+import BookingRequestPage from './pages/bookings/BookingRequestPage';
+import MyBookingsPage from './pages/bookings/MyBookingsPage';
 
 import './App.css';
 
@@ -46,27 +49,15 @@ function App() {
       <NotificationProvider>
         <Router>
           <div className="min-h-screen bg-[#0f172a]">
-            {/* Navigation Bar */}
-            <nav className="bg-slate-900/50 backdrop-blur-md border-b border-slate-800 p-4 sticky top-0 z-50">
-              <div className="max-w-7xl mx-auto flex flex-wrap justify-between items-center gap-4">
-                <NavLink to="/" className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-indigo-400 to-purple-500">
-                  SmartCampus
-                </NavLink>
-                <div className="flex flex-wrap gap-2 sm:gap-4 items-center">
-                  <NavLink to="/facilities" className={navLinkClass}>Facilities</NavLink>
-                  <NavLink to="/tickets" className={navLinkClass}>Tickets</NavLink>
-                  <NavLink to="/admin/facilities" className={navLinkClass}>Management</NavLink>
-                </div>
-              </div>
-            </nav>
 
             <Routes>
               {/* Public Route */}
               <Route path="/login" element={<Login />} />
 
+              <Route path="/" element={<Home />} />
+
               {/* Protected Routes (Authentication අවශ්‍යයි) */}
               <Route element={<ProtectedLayout />}>
-                <Route index element={<Home />} />
                 <Route path="notifications" element={<Notifications />} />
                 
                 {/* Admin Nested Routes */}
@@ -76,8 +67,9 @@ function App() {
                   <Route path="users" element={<UserManagement />} />
                   <Route path="facilities" element={<FacilitiesAdmin />} />
                   {/* Placeholders for team members to link later */}
-                  <Route path="tickets" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Tickets Management (Pending Implementation)</div>} />
-                  <Route path="bookings" element={<div className="flex items-center justify-center h-64 text-slate-400 font-medium">Bookings Management (Pending Implementation)</div>} />
+                  <Route path="tickets" element={<TicketList />} />
+                  <Route path="tickets/:id" element={<TicketDetails />} />
+                  <Route path="bookings" element={<AdminBookings />} />
                 </Route>
 
                 {/* Facilities Section */}
@@ -88,6 +80,9 @@ function App() {
                 <Route path="tickets" element={<TicketList />} />
                 <Route path="tickets/new" element={<CreateTicket />} />
                 <Route path="tickets/:id" element={<TicketDetails />} />
+
+                <Route path="bookings" element={<MyBookingsPage />} />
+                <Route path="bookings/request/:resourceId" element={<BookingRequestPage />} />
               </Route>
 
               {/* 404 - Redirect to facilities or home */}

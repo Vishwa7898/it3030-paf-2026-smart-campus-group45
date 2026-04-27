@@ -45,8 +45,8 @@ public class IncidentTicketService {
 
     public IncidentTicket createTicket(TicketRequest request) throws IOException {
         IncidentTicket ticket = new IncidentTicket();
-        ticket.setResourceId(trimOrDefault(request.getResourceId(), "—"));
-        ticket.setLocation(trimOrDefault(request.getLocation(), "—"));
+        ticket.setResourceId(request.getResourceId().trim());
+        ticket.setLocation(request.getLocation().trim());
         ticket.setCategory(request.getCategory().trim());
         ticket.setDescription(request.getDescription().trim());
         ticket.setPriority(request.getPriority());
@@ -68,13 +68,6 @@ public class IncidentTicketService {
         ticket.setImagePaths(imagePaths);
 
         return ticketRepository.save(ticket);
-    }
-
-    private static String trimOrDefault(String value, String defaultIfBlank) {
-        if (value == null || value.isBlank()) {
-            return defaultIfBlank;
-        }
-        return value.trim();
     }
 
     public List<StudentTicketView> getMyTicketsWithComments(String studentId) {
@@ -292,8 +285,8 @@ public class IncidentTicketService {
             }
             case RESOLVED -> {
                 if (next == TicketStatus.CLOSED) {
-                    if (!admin && !(tech && assignee)) {
-                        throw new IllegalArgumentException("Only an admin or the assigned technician can close a resolved ticket");
+                    if (!admin) {
+                        throw new IllegalArgumentException("Only an admin can close a resolved ticket");
                     }
                     return;
                 }
@@ -352,8 +345,11 @@ public class IncidentTicketService {
         String role = normalizeRole(actorRole);
         boolean admin = "ADMIN".equals(role);
         boolean owner = ticket.getSubmitterId() != null && ticket.getSubmitterId().equals(actorId != null ? actorId.trim() : "");
-        if (!admin && !(owner && ticket.getStatus() == TicketStatus.OPEN)) {
-            throw new IllegalArgumentException("Only an admin can delete any ticket, or the submitter can delete an OPEN ticket");
+        boolean ownerCanDelete = owner
+                && (ticket.getStatus() == TicketStatus.OPEN || ticket.getStatus() == TicketStatus.REJECTED);
+        if (!admin && !ownerCanDelete) {
+            throw new IllegalArgumentException(
+                    "Only an admin can delete any ticket, or the submitter can delete an OPEN/REJECTED ticket");
         }
         ticketCommentRepository.deleteByTicketId(id);
         ticketRepository.delete(ticket);

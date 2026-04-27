@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { facilityService, API_BASE_URL } from '../services/facilityService';
-import { 
-  Plus, Edit2, Trash2, X, Check, AlertCircle, 
+import {
+  Plus, Edit2, Trash2, X, Check, AlertCircle,
   MapPin, Box, ChevronDown, FileText, ChevronLeft, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -53,6 +53,14 @@ const FacilitiesAdmin = () => {
   ];
   const resourceStatus = ['ACTIVE', 'OUT_OF_SERVICE', 'MAINTENANCE', 'UNDER_REPAIR', 'DECOMMISSIONED', 'RESERVED', 'INACTIVE'];
   const allowedImageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+  const inferImageMimeFromFileName = (file) => {
+    const name = (file?.name || '').toLowerCase();
+    if (name.endsWith('.webp')) return 'image/webp';
+    if (name.endsWith('.png')) return 'image/png';
+    if (name.endsWith('.jpg') || name.endsWith('.jpeg')) return 'image/jpeg';
+    return file?.type || '';
+  };
 
   const isCapacityRequired = useMemo(
     () => ['LECTURE_HALL', 'LAB', 'MEETING_ROOM', 'SEMINAR_ROOM', 'AUDITORIUM', 'SPORTS_FACILITY'].includes(formData.type),
@@ -155,7 +163,8 @@ const FacilitiesAdmin = () => {
     if (!selectedImage && !hasStoredImage) {
       errors.image = 'Resource image is required';
     } else if (selectedImage) {
-      if (!allowedImageTypes.includes(selectedImage.type)) {
+      const effectiveType = selectedImage.type || inferImageMimeFromFileName(selectedImage);
+      if (!allowedImageTypes.includes(effectiveType)) {
         errors.image = 'File type not supported. Allowed: JPG, PNG, WEBP';
       }
     }
@@ -330,7 +339,7 @@ const FacilitiesAdmin = () => {
           </Link>
         </div>
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
           >
@@ -342,7 +351,7 @@ const FacilitiesAdmin = () => {
             </h1>
             <p className="text-slate-400 mt-3 text-lg font-medium">Campus Resource Management System</p>
           </motion.div>
-          
+
           {activeTab === 'inventory' && (
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -365,8 +374,8 @@ const FacilitiesAdmin = () => {
           <button
             type="button"
             onClick={() => goToTab('inventory')}
-            className={`px-6 py-4 font-bold transition-all ${activeTab === 'inventory' 
-              ? 'text-indigo-400 border-b-2 border-indigo-500' 
+            className={`px-6 py-4 font-bold transition-all ${activeTab === 'inventory'
+              ? 'text-indigo-400 border-b-2 border-indigo-500'
               : 'text-slate-400 hover:text-slate-300'}`}
           >
             <div className="flex items-center gap-2">
@@ -374,7 +383,7 @@ const FacilitiesAdmin = () => {
               Inventory Management
             </div>
           </button>
-          <button
+          {/* <button
             type="button"
             onClick={() => goToTab('reports')}
             className={`px-6 py-4 font-bold transition-all ${activeTab === 'reports' 
@@ -385,11 +394,11 @@ const FacilitiesAdmin = () => {
               <FileText size={20} />
               Reports
             </div>
-          </button>
+          </button>*/}
         </div>
 
         {error && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl flex items-center gap-3 text-red-400"
@@ -449,7 +458,7 @@ const FacilitiesAdmin = () => {
                       ))
                     ) : facilities.length > 0 ? (
                       facilities.map((resource, index) => (
-                        <motion.tr 
+                        <motion.tr
                           key={resource.id}
                           initial={{ opacity: 0 }}
                           animate={{ opacity: 1 }}
@@ -469,24 +478,23 @@ const FacilitiesAdmin = () => {
                           </td>
                           <td className="px-6 py-5 text-center font-bold text-slate-300">{resource.capacity}</td>
                           <td className="px-6 py-5 text-center">
-                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black border ${
-                              resource.status === 'ACTIVE' 
-                              ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
-                              : 'bg-red-500/10 text-red-400 border-red-500/20'
-                            }`}>
+                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-black border ${resource.status === 'ACTIVE'
+                                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'
+                                : 'bg-red-500/10 text-red-400 border-red-500/20'
+                              }`}>
                               <span className={`w-1.5 h-1.5 rounded-full ${resource.status === 'ACTIVE' ? 'bg-emerald-400' : 'bg-red-400'} animate-pulse`} />
                               {resource.status}
                             </span>
                           </td>
                           <td className="px-6 py-5 text-right">
                             <div className="flex justify-end gap-2 text-slate-400">
-                              <button 
+                              <button
                                 onClick={() => handleEdit(resource)}
                                 className="p-2 hover:bg-indigo-500/20 hover:text-indigo-400 rounded-xl transition-all"
                               >
                                 <Edit2 size={18} />
                               </button>
-                              <button 
+                              <button
                                 onClick={() => handleDelete(resource.id)}
                                 className="p-2 hover:bg-red-500/20 hover:text-red-400 rounded-xl transition-all"
                               >

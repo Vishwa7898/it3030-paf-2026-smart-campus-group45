@@ -16,15 +16,20 @@ public class NotificationService {
     }
 
     public List<Notification> getNotificationsForUser(String email) {
-        return notificationRepository.findByRecipientEmailOrderByCreatedAtDesc(email);
+        return notificationRepository.findByRecipientEmailInOrderByCreatedAtDesc(List.of(email, ""));
     }
 
     public Notification create(String email, String title, String message, String category) {
+        return create(email, title, message, category, null);
+    }
+
+    public Notification create(String email, String title, String message, String category, String actionUrl) {
         Notification notification = new Notification();
         notification.setRecipientEmail(email);
         notification.setTitle(title);
         notification.setMessage(message);
         notification.setCategory(category);
+        notification.setActionUrl(actionUrl);
         notification.setRead(false);
         notification.setCreatedAt(Instant.now());
         return notificationRepository.save(notification);
@@ -34,7 +39,7 @@ public class NotificationService {
         Notification notification = notificationRepository.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Notification not found"));
 
-        if (!notification.getRecipientEmail().equals(email)) {
+        if (!notification.getRecipientEmail().equals(email) && !notification.getRecipientEmail().equals("")) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Cannot update another user's notification");
         }
 
@@ -43,7 +48,7 @@ public class NotificationService {
     }
 
     public int markAllAsRead(String email) {
-        List<Notification> notifications = notificationRepository.findByRecipientEmailOrderByCreatedAtDesc(email);
+        List<Notification> notifications = notificationRepository.findByRecipientEmailInOrderByCreatedAtDesc(List.of(email, ""));
         int updatedCount = 0;
         for (Notification notification : notifications) {
             if (!notification.isRead()) {

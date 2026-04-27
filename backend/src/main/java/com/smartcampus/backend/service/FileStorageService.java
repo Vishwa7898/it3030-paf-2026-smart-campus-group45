@@ -11,6 +11,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Locale;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,6 +22,11 @@ public class FileStorageService {
             "image/jpeg", "image/png", "image/webp"
     );
     private static final long MAX_FILE_SIZE_BYTES = 25 * 1024; // 25KB
+
+    static {
+        // Ensure SPI-provided readers (e.g. TwelveMonkeys WebP) are registered.
+        ImageIO.scanForPlugins();
+    }
 
     @Value("${app.upload.dir:uploads}")
     private String uploadDir;
@@ -37,7 +43,7 @@ public class FileStorageService {
             throw new IllegalArgumentException("File type not supported. Allowed: JPG, JPEG, PNG, WEBP");
         }
 
-        if (!ALLOWED_CONTENT_TYPES.contains(file.getContentType())) {
+        if (!isContentTypeAllowed(file.getContentType(), extension)) {
             throw new IllegalArgumentException("Invalid file content type. Upload a valid image");
         }
 
@@ -45,12 +51,7 @@ public class FileStorageService {
             throw new IllegalArgumentException("File size exceeds 25 KB limit");
         }
 
-        try (var inputStream = file.getInputStream()) {
-            var image = ImageIO.read(inputStream);
-            if (image == null) {
-                throw new IllegalArgumentException("Invalid image file");
-            }
-        }
+        validateImageBytes(file, extension);
 
         Path uploadPath = Paths.get(uploadDir).toAbsolutePath().normalize();
         Files.createDirectories(uploadPath);
@@ -62,11 +63,63 @@ public class FileStorageService {
         return "/uploads/" + fileName;
     }
 
+    /**
+     * Browsers sometimes send {@code application/octet-stream} or omit Content-Type for file inputs.
+     * WebP is especially prone to mismatched types while still being a valid image.
+     */
+    private boolean isContentTypeAllowed(String contentType, String extension) {
+        if (contentType == null || contentType.isBlank()) {
+            return true;
+        }
+        String ct = contentType.trim().toLowerCase(Locale.ROOT);
+        if (ALLOWED_CONTENT_TYPES.contains(ct)) {
+            return true;
+        }
+        return "application/octet-stream".equals(ct) && ALLOWED_EXTENSIONS.contains(extension);
+    }
+
+    /**
+     * JDK {@link ImageIO} often cannot decode WebP even with plugins on some runtimes.
+     * For {@code .webp} we validate the standard RIFF container signature instead.
+     */
+    private void validateImageBytes(MultipartFile file, String extension) throws IOException {
+        if ("webp".equals(extension)) {
+            try (var inputStream = file.getInputStream()) {
+                byte[] header = inputStream.readNBytes(12);
+                if (!isRiffWebPHeader(header)) {
+                    throw new IllegalArgumentException("Invalid image file");
+                }
+            }
+            return;
+        }
+
+        try (var inputStream = file.getInputStream()) {
+            var image = ImageIO.read(inputStream);
+            if (image == null) {
+                throw new IllegalArgumentException("Invalid image file");
+            }
+        }
+    }
+
+    private static boolean isRiffWebPHeader(byte[] header) {
+        if (header == null || header.length < 12) {
+            return false;
+        }
+        return header[0] == 'R'
+                && header[1] == 'I'
+                && header[2] == 'F'
+                && header[3] == 'F'
+                && header[8] == 'W'
+                && header[9] == 'E'
+                && header[10] == 'B'
+                && header[11] == 'P';
+    }
+
     private String getExtension(String fileName) {
         int dotIndex = fileName.lastIndexOf('.');
         if (dotIndex < 0 || dotIndex == fileName.length() - 1) {
             throw new IllegalArgumentException("Uploaded file must have a valid extension");
         }
-        return fileName.substring(dotIndex + 1).toLowerCase();
+        return fileName.substring(dotIndex + 1).toLowerCase(Locale.ROOT);
     }
 }

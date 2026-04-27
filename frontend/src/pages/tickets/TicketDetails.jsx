@@ -1,18 +1,26 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Clock, AlertCircle, XCircle, FileText, User, Trash2 } from 'lucide-react';
 import { TicketService, getImageUrl } from '../../services/api';
 import CommentSection from '../../components/CommentSection';
 import TicketProgressStepper from '../../components/TicketProgressStepper';
-import { useAuth } from '../../auth/AuthContext';
+import { useAuth } from '../../context/AuthContext';
 
 const TicketDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { user: currentUser, isStudent, isAdmin } = useAuth();
+  const { user: currentUser, isStudent, isAdmin, isTechnician } = useAuth();
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
-  
+  const location = useLocation();
+  const backUrl = location.pathname.startsWith('/admin') ? '/admin/tickets' : '/tickets';
+  const currentUserId =
+    currentUser?.id ||
+    currentUser?.userId ||
+    currentUser?.studentId ||
+    currentUser?.email ||
+    '';
+
   const [status, setStatus] = useState('');
   const [resolutionNotes, setResolutionNotes] = useState('');
   const [assigneeId, setAssigneeId] = useState('');
@@ -23,11 +31,15 @@ const TicketDetails = () => {
 
   useEffect(() => {
     loadTicket();
-  }, [id]);
+  }, [id, currentUserId, isAdmin, isTechnician]);
 
   const loadTicket = async () => {
     try {
-      const data = await TicketService.getTicketById(id);
+      const viewerRole = isAdmin ? 'ADMIN' : isTechnician ? 'TECHNICIAN' : 'USER';
+      const data = await TicketService.getTicketById(id, {
+        viewerRole,
+        viewerId: currentUserId,
+      });
       setTicket(data);
       setStatus(data.status);
       setResolutionNotes(data.resolutionNotes || '');
@@ -93,24 +105,24 @@ const TicketDetails = () => {
     if (!window.confirm('Delete this ticket permanently?')) return;
     try {
       await TicketService.deleteTicket(id);
-      navigate('/tickets');
+      navigate(backUrl);
     } catch (err) {
       alert(apiError(err));
     }
   };
 
-  const canAssign = currentUser?.role === 'ADMIN';
+  const canAssign = isAdmin;
   const canManageWorkflow =
-    currentUser?.role === 'ADMIN' ||
-    (currentUser?.role === 'TECHNICIAN' && ticket?.assigneeId === currentUser?.id);
+    isAdmin ||
+    (isTechnician && ticket?.assigneeId === currentUserId);
   const canDelete =
-    currentUser?.role === 'ADMIN' ||
-    (ticket?.status === 'OPEN' && ticket?.submitterId === currentUser?.id);
+    isAdmin ||
+    ((ticket?.status === 'OPEN' || ticket?.status === 'REJECTED') && ticket?.submitterId === currentUserId);
   const canEditOpen =
     ticket?.status === 'OPEN' &&
-    (currentUser?.role === 'ADMIN' || ticket?.submitterId === currentUser?.id);
+    (isAdmin || ticket?.submitterId === currentUserId);
   const technicianReadOnly =
-    currentUser?.role === 'TECHNICIAN' && !canManageWorkflow && ticket;
+    isTechnician && !canManageWorkflow && ticket;
   const statusOptions = (() => {
     if (!ticket) return [];
     const current = ticket.status;
@@ -119,10 +131,10 @@ const TicketDetails = () => {
       if (current === 'RESOLVED') return [current, 'CLOSED', 'REJECTED'];
       return [current];
     }
-    if (currentUser?.role === 'TECHNICIAN' && ticket.assigneeId === currentUser?.id) {
+    if (isTechnician && ticket.assigneeId === currentUserId) {
       if (current === 'OPEN') return [current, 'IN_PROGRESS'];
       if (current === 'IN_PROGRESS') return [current, 'RESOLVED'];
-      if (current === 'RESOLVED') return [current, 'CLOSED'];
+      if (current === 'RESOLVED') return [current];
       return [current];
     }
     return [current];
@@ -133,11 +145,11 @@ const TicketDetails = () => {
       <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin"></div>
     </div>
   );
-  
+
   if (!ticket) return <div className="text-center py-20 text-slate-500">Ticket not found</div>;
 
   const getStatusIcon = (status) => {
-    switch(status) {
+    switch (status) {
       case 'OPEN': return <AlertCircle className="w-5 h-5 text-amber-500" />;
       case 'IN_PROGRESS': return <Clock className="w-5 h-5 text-blue-500" />;
       case 'RESOLVED': return <CheckCircle2 className="w-5 h-5 text-emerald-500" />;
@@ -150,8 +162,8 @@ const TicketDetails = () => {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center gap-4">
-        <Link 
-          to="/tickets"
+        <Link
+          to={backUrl}
           className="p-2 rounded-xl bg-white border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -182,12 +194,11 @@ const TicketDetails = () => {
                   Location: <span className="font-medium text-slate-700">{ticket.location}</span>
                 </p>
               </div>
-              <div className={`px-4 py-1.5 border rounded-lg text-sm font-bold ${
-                ticket.priority === 'CRITICAL' ? 'bg-red-50 border-red-200 text-red-700' :
+              <div className={`px-4 py-1.5 border rounded-lg text-sm font-bold ${ticket.priority === 'CRITICAL' ? 'bg-red-50 border-red-200 text-red-700' :
                 ticket.priority === 'HIGH' ? 'bg-orange-50 border-orange-200 text-orange-700' :
-                ticket.priority === 'MEDIUM' ? 'bg-blue-50 border-blue-200 text-blue-700' :
-                'bg-slate-50 border-slate-200 text-slate-700'
-              }`}>
+                  ticket.priority === 'MEDIUM' ? 'bg-blue-50 border-blue-200 text-blue-700' :
+                    'bg-slate-50 border-slate-200 text-slate-700'
+                }`}>
                 {ticket.priority} PRIORITY
               </div>
             </div>
@@ -239,16 +250,16 @@ const TicketDetails = () => {
                 <h3 className="text-sm font-bold text-slate-800 uppercase tracking-wider mb-3">Evidence Attachments</h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {ticket.imagePaths.map((path, idx) => (
-                    <a 
-                      key={idx} 
-                      href={getImageUrl(path)} 
-                      target="_blank" 
+                    <a
+                      key={idx}
+                      href={getImageUrl(path)}
+                      target="_blank"
                       rel="noreferrer"
                       className="block aspect-square rounded-xl overflow-hidden border border-slate-200 hover:border-indigo-400 hover:ring-2 hover:ring-indigo-100 transition-all"
                     >
-                      <img 
-                        src={getImageUrl(path)} 
-                        alt="Evidence" 
+                      <img
+                        src={getImageUrl(path)}
+                        alt="Evidence"
                         className="w-full h-full object-cover"
                       />
                     </a>
@@ -296,6 +307,15 @@ const TicketDetails = () => {
               <p className="text-xs text-slate-500 mt-3 px-1 leading-relaxed">
                 Your assigned technician moves OPEN → IN_PROGRESS → RESOLVED. Admin can reject, and admin/system can close.
               </p>
+              {canDelete && (
+                <button
+                  type="button"
+                  onClick={handleDeleteTicket}
+                  className="w-full mt-4 py-2.5 flex items-center justify-center gap-2 text-sm text-red-700 border border-red-200 rounded-xl bg-red-50 hover:bg-red-100"
+                >
+                  <Trash2 className="w-4 h-4" /> Remove ticket
+                </button>
+              )}
             </div>
           )}
 

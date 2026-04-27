@@ -35,11 +35,12 @@ const demoRoles = [
 ];
 
 export default function Login() {
-  const { user, login } = useAuth();
+  const { user, login, isAdmin } = useAuth();
+  const navigate = useNavigate();
 
   // දැනටමත් login වී ඇත්නම් අදාළ තැනට යොමු කරන්න
   if (user) {
-    return <Navigate to="/facilities" replace />;
+    return <Navigate to={isAdmin ? "/admin" : "/facilities"} replace />;
   }
 
   return (
