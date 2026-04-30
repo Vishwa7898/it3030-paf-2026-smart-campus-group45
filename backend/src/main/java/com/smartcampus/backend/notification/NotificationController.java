@@ -3,7 +3,7 @@ package com.smartcampus.backend.notification;
 import java.util.List;
 
 import jakarta.validation.Valid;
-import jakarta.validation.constraints.Email;
+
 import jakarta.validation.constraints.NotBlank;
 
 import org.springframework.http.ResponseEntity;
