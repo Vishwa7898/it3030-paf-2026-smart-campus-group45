@@ -1,3 +1,8 @@
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.junit.jupiter.api.Test;
+
 @SpringBootTest
 class EnvTest {
 
