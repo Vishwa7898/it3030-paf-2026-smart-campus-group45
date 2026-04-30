@@ -1,13 +1,9 @@
-package com.smartcampus.backend;
-
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled("Local environment debug helper; not part of CI test suite.")
-@SpringBootTest(classes = BackendApplication.class)
+@SpringBootTest
 class EnvTest {
 
     @Autowired
